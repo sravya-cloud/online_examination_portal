@@ -2,9 +2,9 @@
 
 ## 📌 Project Overview
 
-The **Online Examination Portal** is a web-based system designed to conduct and manage online examinations in a controlled and secure environment.
+The **Online Examination Portal** is a web based system designed to conduct and manage online examinations in a controlled and secure environment.
 
-The system provides separate functionalities for **Students, Teachers, and Administrators**. It supports examination creation, question management, student examination attempts, automatic evaluation, result management, and administrative control.
+The system provides separate functionalities for **Students, Teachers and Administrators**. It supports examination creation, question management, student examination attempts, automatic evaluation, result management, and administrative control.
 
 This repository contains the **Phase 1** work of the project, including the Software Requirements Specification, validation and test planning, architecture and design specifications, use cases, and related documentation.
 
