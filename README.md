@@ -109,28 +109,3 @@ The following examination rules are part of the Phase 1 requirements:
 
 ---
 
-## 🏗️ Project Structure
-
-```text
-Online-Examination-Portal/
-│
-├── README.md
-│
-├── Documentation/
-│   ├── SRS/
-│   │   └── Software Requirements Specification
-│   │
-│   ├── Validation/
-│   │   └── Validation Specification / Test Plan
-│   │
-│   └── Architecture/
-│       └── Software Architecture & Design Specification
-│
-├── Source/
-│   └── Application source code
-│
-├── Tests/
-│   └── Test cases and validation-related files
-│
-└── Database/
-    └── Database scripts / schema
