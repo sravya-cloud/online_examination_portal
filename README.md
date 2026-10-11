@@ -107,5 +107,6 @@ The following examination rules are part of the Phase 1 requirements:
 - Protection of restricted operations
 - Security validation and planned penetration testing
 
----
+----
+
 
