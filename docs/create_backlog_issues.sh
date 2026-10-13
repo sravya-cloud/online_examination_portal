@@ -6,10 +6,10 @@ set -e
 REPO="sravya-cloud/online_examination_portal"
 OWNER="sravya-cloud"
 PROJECT_NUMBER=3
-MEMBER1="github-username-1"
-MEMBER2="github-username-2"
-MEMBER3="github-username-3"
-MEMBER4="github-username-4"
+MEMBER1="sravya-cloud"
+MEMBER2="nehas005"
+MEMBER3="manasvidr"
+MEMBER4="NehaaJ05"
 for l in sprint-1 sprint-2 functional non-functional; do gh label create "$l" --repo "$REPO" 2>/dev/null || true; done
 for p in 1 2 3 5; do gh label create "sp-$p" --repo "$REPO" 2>/dev/null || true; done
 add() { # id title body sprint points assignee type
