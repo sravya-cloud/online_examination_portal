@@ -110,3 +110,9 @@ The following examination rules are part of the Phase 1 requirements:
 ----
 
 
+
+## 📚 Phase 1 Documentation
+
+- [SRS and requirements (FR/NFR, examination rules)](1-SRS-and-Work-Breakdown/README.md)
+- [Test planning (functional, security, non-functional, penetration plans)](2-Test-Planning/README.md)
+- [Requirements engineering (problem statement, use cases, RTM, feasibility)](3-Requirements-Engineering/README.md)
