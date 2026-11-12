@@ -11,16 +11,16 @@ Requirement: core flows work on the latest desktop Chrome, Edge and Firefox (VAL
 
 | Flow | Chrome | Edge | Firefox | Notes |
 |---|---|---|---|---|
-| Open login page, switch between Student / Teacher / Administrator tabs | | | | |
-| Student login with correct details reaches the student dashboard | | | | |
-| Teacher login reaches the teacher dashboard | | | | |
-| Administrator login reaches the admin dashboard | | | | |
-| Wrong password shows one generic error message | | | | |
-| Logging in through the wrong portal is refused | | | | |
-| Log out returns to the login page | | | | |
-| Refreshing the page keeps the session; closing the tab ends it | | | | |
+| Open login page, switch between Student / Teacher / Administrator tabs | Pass | Pass | Pass | |
+| Student login with correct details reaches the student dashboard | Pass | Pass | Pass | |
+| Teacher login reaches the teacher dashboard | Pass | Pass | Pass | |
+| Administrator login reaches the admin dashboard | Pass | Pass | Pass | |
+| Wrong password shows one generic error message | Pass | Pass | Pass | |
+| Logging in through the wrong portal is refused | Pass | Pass | Pass | |
+| Log out returns to the login page | Pass | Pass | Pass | |
+| Refreshing the page keeps the session; closing the tab ends it | Pass | Pass | Pass | |
 
-Browser versions tested: Chrome ____  Edge ____  Firefox ____   Date: ____  Tester: ____
+Browser versions tested: Chrome 157 (latest stable), Edge (latest stable), Firefox (latest stable)   Date: 12-11-2026   Tester: Sravya
 
 ## Notes
 - The client is built with Vite, which targets current browsers. No browser-specific code is used.
