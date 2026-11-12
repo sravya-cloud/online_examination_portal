@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE and OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+/server/.claude/
+/server/.agents/
+/server/.cursor/
+/server/.devin/
