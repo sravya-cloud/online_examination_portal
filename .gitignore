@@ -17,3 +17,8 @@ npm-debug.log*
 .vscode/
 .DS_Store
 Thumbs.db
+
+/server/.claude/
+/server/.agents/
+/server/.cursor/
+/server/.devin/
