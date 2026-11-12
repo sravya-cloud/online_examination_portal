@@ -22,3 +22,20 @@ model User {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
 }
+
+model QuestionPool {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  exams     Exam[]
+}
+
+model Exam {
+  id             String       @id @default(cuid())
+  title          String
+  questionCount  Int
+  questionPoolId String
+  questionPool   QuestionPool @relation(fields: [questionPoolId], references: [id], onDelete: Restrict)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
