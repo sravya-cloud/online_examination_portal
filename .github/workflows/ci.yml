@@ -1,0 +1,58 @@
+name: Online Examination Portal CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run frontend lint
+        working-directory: client
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: client
+        run: npm run build
+
+  backend:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install backend dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Check backend syntax
+        working-directory: server
+        run: node --check src/index.js
+
+      - name: Validate Prisma schema
+        working-directory: server
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/exam_portal
+        run: npx prisma validate
