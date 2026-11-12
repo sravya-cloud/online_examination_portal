@@ -1,23 +1,16 @@
+import "dotenv/config";
+import { createApp } from "./app.js";
+import { createPrismaUserRepository } from "./repositories/userRepository.js";
 
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message: "Online Examination Portal backend is running"
-  });
+const app = createApp({
+  userRepo: createPrismaUserRepository(),
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h",
+  corsOrigin: process.env.CORS_ORIGIN,
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
