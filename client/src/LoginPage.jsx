@@ -25,6 +25,7 @@ export default function LoginPage({ onLoggedIn }) {
   return (
     <main className="login">
       <h1>Online Examination Portal</h1>
+      <p className="subtitle">Choose your portal and sign in.</p>
       <div className="tabs" role="tablist" aria-label="Choose portal">
         {Object.entries(PORTALS).map(([key, { label }]) => (
           <button
