@@ -1,7 +1,7 @@
 import express from "express";
 import { selectRandomQuestions } from "../services/questionSelection.js";
 
-export function createExamRouter({ examRepo }) {
+export function createExamRouter({ examRepo, questionRepo }) {
   const router = express.Router();
 
   // Helper to validate duration and availability period (FR-08)
@@ -63,7 +63,6 @@ export function createExamRouter({ examRepo }) {
 
   // Create examination (FR-04, FR-08)
   router.post("/", async (req, res) => {
-    // Only teachers or administrators can create exams
     if (req.auth?.role !== "TEACHER" && req.auth?.role !== "ADMIN") {
       return res.status(403).json({ error: "Only teachers and administrators can create examinations." });
     }
@@ -91,7 +90,7 @@ export function createExamRouter({ examRepo }) {
     }
 
     const timing = validateExamTiming({
-      durationMinutes: durationMinutes ?? 60,
+      durationMinutes,
       startTime,
       endTime,
       resultReleaseTime,
@@ -112,15 +111,17 @@ export function createExamRouter({ examRepo }) {
         return res.status(404).json({ error: "Selected question pool was not found." });
       }
 
-      const exam = await examRepo.createExam({
+      const examPayload = {
         title: title.trim(),
         questionCount,
         questionPoolId: normalizedPoolId,
-        durationMinutes: timing.parsedDuration ?? 60,
-        startTime: timing.parsedStart ?? null,
-        endTime: timing.parsedEnd ?? null,
-        resultReleaseTime: timing.parsedRelease ?? null,
-      });
+      };
+      if (timing.parsedDuration !== undefined) examPayload.durationMinutes = timing.parsedDuration;
+      if (timing.parsedStart !== undefined) examPayload.startTime = timing.parsedStart;
+      if (timing.parsedEnd !== undefined) examPayload.endTime = timing.parsedEnd;
+      if (timing.parsedRelease !== undefined) examPayload.resultReleaseTime = timing.parsedRelease;
+
+      const exam = await examRepo.createExam(examPayload);
 
       return res.status(201).json({
         message: "Examination created successfully.",
@@ -243,16 +244,19 @@ export function createExamRouter({ examRepo }) {
         return res.status(404).json({ error: "Examination not found." });
       }
 
-      // Fetch pool and pool questions
       const pool = await examRepo.findQuestionPoolById(exam.questionPoolId);
-      if (!pool || !Array.isArray(pool.questions)) {
+      if (!pool) {
+        return res.status(404).json({ error: "Selected question pool was not found." });
+      }
+
+      const poolQuestions = pool.questions || (questionRepo ? await questionRepo.listQuestions(exam.questionPoolId) : []);
+      if (!Array.isArray(poolQuestions) || poolQuestions.length === 0) {
         return res.status(400).json({ error: "Associated question pool or its questions could not be loaded." });
       }
 
-      // FR-09: Random selection of exactly N questions from pool (VAL-F05)
       let selectedQuestions;
       try {
-        selectedQuestions = selectRandomQuestions(pool.questions, exam.questionCount);
+        selectedQuestions = selectRandomQuestions(poolQuestions, exam.questionCount);
       } catch (err) {
         if (err.code === "INSUFFICIENT_POOL_QUESTIONS") {
           return res.status(400).json({
@@ -264,7 +268,6 @@ export function createExamRouter({ examRepo }) {
         throw err;
       }
 
-      // FR-10: Fix and persist identical question set for all students (VAL-F05)
       const selectedQuestionIds = selectedQuestions.map((q) => q.id);
       const publishedExam = await examRepo.publishExam(id, selectedQuestionIds);
 
@@ -294,7 +297,6 @@ export function createExamRouter({ examRepo }) {
         return res.status(403).json({ error: "Examination is not yet published." });
       }
 
-      // Check availability period for students
       if (isStudent) {
         const now = Date.now();
         if (exam.startTime && now < new Date(exam.startTime).getTime()) {
@@ -313,7 +315,6 @@ export function createExamRouter({ examRepo }) {
 
       const questions = await examRepo.getExamQuestions(id);
 
-      // Sanitize questions for students (prevent answer leakage)
       const payload = isStudent
         ? questions.map(({ id, text, options, difficulty }) => ({
             id,
@@ -353,12 +354,10 @@ export function createExamRouter({ examRepo }) {
         return res.status(404).json({ error: "No completed attempt found for this examination." });
       }
 
-      // Check configured result release time
       const now = Date.now();
       const hasReleaseTime = exam.resultReleaseTime !== null && exam.resultReleaseTime !== undefined;
       const isPastReleaseTime = hasReleaseTime ? now >= new Date(exam.resultReleaseTime).getTime() : true;
 
-      // If student checks before release time, hide results (SEC-06)
       if (!isTeacherOrAdmin && !isPastReleaseTime) {
         return res.status(200).json({
           isReleased: false,
@@ -369,7 +368,6 @@ export function createExamRouter({ examRepo }) {
         });
       }
 
-      // Result is released or user is authorized teacher/admin
       return res.status(200).json({
         isReleased: true,
         examId: id,
@@ -387,7 +385,6 @@ export function createExamRouter({ examRepo }) {
   });
 
   // FR-20: View examination reports (VAL-F14)
-  // Authorized roles: TEACHER, ADMIN only. Students denied with 403.
   router.get("/:id/report", async (req, res) => {
     if (req.auth?.role !== "TEACHER" && req.auth?.role !== "ADMIN") {
       return res.status(403).json({
@@ -428,7 +425,6 @@ export function createExamRouter({ examRepo }) {
 
       const passRate = totalAttempts > 0 ? Number(((passCount / totalAttempts) * 100).toFixed(1)) : 0;
 
-      // Difficulty distribution
       const difficultyCounts = { EASY: 0, MEDIUM: 0, HARD: 0 };
       questions.forEach((q) => {
         if (q.difficulty && difficultyCounts[q.difficulty] !== undefined) {
@@ -472,7 +468,7 @@ export function createExamRouter({ examRepo }) {
     }
   });
 
-  // Record an attempt (Helper for attempt flows & testing)
+  // Record an attempt
   router.post("/:id/attempts", async (req, res) => {
     const { id } = req.params;
     const studentId = req.auth?.userId || req.body?.studentId;

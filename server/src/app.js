@@ -40,7 +40,7 @@ export function createApp({
     app.use(
       "/api/exams",
       authenticate({ secret: jwtSecret }),
-      createExamRouter({ examRepo })
+      createExamRouter({ examRepo, questionRepo })
     );
   }
 
@@ -48,7 +48,7 @@ export function createApp({
     app.use(
       "/api/questions",
       authenticate({ secret: jwtSecret }),
-      requireRole("TEACHER", "ADMIN"),
+      requireRole("TEACHER"),
       createQuestionRouter({ questionRepo, examRepo })
     );
   }

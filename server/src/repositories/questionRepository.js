@@ -2,54 +2,42 @@ import { getPrisma } from "../db.js";
 
 export function createPrismaQuestionRepository({ getClient = getPrisma } = {}) {
   return {
-    async findQuestionById(id) {
+    findQuestionPoolById(id) {
+      return getClient().questionPool.findUnique({ where: { id } });
+    },
+
+    createQuestion({ text, options, correctAnswer, questionPoolId, difficulty }) {
+      return getClient().question.create({
+        data: { text, options, correctAnswer, questionPoolId, difficulty },
+        include: { questionPool: true },
+      });
+    },
+
+    listQuestions(questionPoolId) {
+      return getClient().question.findMany({
+        where: { questionPoolId },
+        include: { questionPool: true },
+        orderBy: { createdAt: "asc" },
+      });
+    },
+
+    findQuestionById(id) {
       return getClient().question.findUnique({
         where: { id },
-        include: { pool: true },
+        include: { questionPool: true },
       });
     },
 
-    async createQuestion({ poolId, text, options, correctOption, difficulty = "MEDIUM" }) {
-      return getClient().question.create({
-        data: {
-          poolId,
-          text,
-          options,
-          correctOption,
-          difficulty,
-        },
-      });
-    },
-
-    async updateQuestion(id, { text, options, correctOption, difficulty }) {
-      const data = {};
-      if (text !== undefined) data.text = text;
-      if (options !== undefined) data.options = options;
-      if (correctOption !== undefined) data.correctOption = correctOption;
-      if (difficulty !== undefined) data.difficulty = difficulty;
-
+    updateQuestion(id, data) {
       return getClient().question.update({
         where: { id },
         data,
       });
     },
 
-    async deleteQuestion(id) {
+    deleteQuestion(id) {
       return getClient().question.delete({
         where: { id },
-      });
-    },
-
-    async listQuestionsByPool(poolId) {
-      return getClient().question.findMany({
-        where: { poolId },
-        orderBy: { createdAt: "asc" },
-      });
-    },
-
-    async countQuestionsByPool(poolId) {
-      return getClient().question.count({
-        where: { poolId },
       });
     },
   };
