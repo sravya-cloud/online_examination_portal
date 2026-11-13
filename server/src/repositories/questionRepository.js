@@ -5,9 +5,9 @@ export function createPrismaQuestionRepository({ getClient = getPrisma } = {}) {
     findQuestionPoolById(id) {
       return getClient().questionPool.findUnique({ where: { id } });
     },
-    createQuestion({ text, options, correctAnswer, questionPoolId }) {
+    createQuestion({ text, options, correctAnswer, questionPoolId, difficulty }) {
       return getClient().question.create({
-        data: { text, options, correctAnswer, questionPoolId },
+        data: { text, options, correctAnswer, questionPoolId, difficulty },
         include: { questionPool: true },
       });
     },

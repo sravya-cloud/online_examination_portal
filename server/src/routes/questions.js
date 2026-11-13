@@ -4,7 +4,7 @@ export function createQuestionRouter({ questionRepo }) {
   const router = express.Router();
 
   router.post("/", async (req, res) => {
-    const { text, options, correctAnswer, questionPoolId } = req.body ?? {};
+    const { text, options, correctAnswer, questionPoolId, difficulty } = req.body ?? {};
     const details = {};
 
     if (typeof text !== "string" || !text.trim()) {
@@ -21,6 +21,9 @@ export function createQuestionRouter({ questionRepo }) {
     if (typeof questionPoolId !== "string" || !questionPoolId.trim()) {
       details.questionPoolId = "A question pool selection is required.";
     }
+    if (!["EASY", "MEDIUM", "HARD"].includes(difficulty)) {
+      details.difficulty = "Difficulty must be EASY, MEDIUM, or HARD.";
+    }
 
     if (Object.keys(details).length) {
       return res.status(400).json({ error: "Invalid question details.", details });
@@ -36,6 +39,7 @@ export function createQuestionRouter({ questionRepo }) {
         options: options.map((option) => option.trim()),
         correctAnswer: correctAnswer.trim(),
         questionPoolId: poolId,
+        difficulty,
       });
       return res.status(201).json({ message: "Question created successfully.", question });
     } catch (error) {

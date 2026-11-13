@@ -12,6 +12,12 @@ enum Role {
   ADMIN
 }
 
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 // FR-01, FR-02, FR-22: one account table, separated by role.
 model User {
   id           Int      @id @default(autoincrement())
@@ -46,6 +52,7 @@ model Question {
   text           String
   options        String[]
   correctAnswer  String
+  difficulty     QuestionDifficulty
   questionPoolId String
   questionPool   QuestionPool @relation(fields: [questionPoolId], references: [id], onDelete: Restrict)
   createdAt      DateTime     @default(now())
