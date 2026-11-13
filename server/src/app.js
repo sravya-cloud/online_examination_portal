@@ -4,9 +4,11 @@ import { assertSecret } from "./auth/tokens.js";
 import { createLoginLimiter } from "./auth/rateLimiter.js";
 import { authenticate, requireRole } from "./middleware/auth.js";
 import { createAuthRouter } from "./routes/auth.js";
+import { createExamRouter } from "./routes/exams.js";
 
 export function createApp({
   userRepo,
+  examRepo,
   jwtSecret,
   jwtExpiresIn = "1h",
   limiter = createLoginLimiter(),
@@ -30,6 +32,13 @@ export function createApp({
       expiresIn: jwtExpiresIn,
       limiter,
     })
+  );
+
+  app.use(
+    "/api/exams",
+    authenticate({ secret: jwtSecret }),
+    requireRole("TEACHER"),
+    createExamRouter({ examRepo })
   );
 
   // Role-protected landing endpoints (NFR-01). Later sprints replace these
