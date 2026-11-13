@@ -14,7 +14,9 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | NFR-08 Browser compatibility | Manual | `docs/browser-compatibility.md` | Planned |
 | NFR-09 Testability | Review | This table | Done |
 | FR-03, FR-23, FR-24 | | | Planned |
-| FR-04 to FR-21 | | | Planned |
+| FR-04 | Automated | `server/test/exams.test.js` | Done |
+| FR-05 | Automated | `server/test/questions.test.js` | Done |
+| FR-06 to FR-21 | | | Planned |
 | NFR-02 to NFR-06, NFR-10 to NFR-12 | | | Planned |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
