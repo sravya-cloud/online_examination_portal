@@ -40,7 +40,7 @@ async function start(repo = makeQuestionRepo()) {
   return { call, repo, close: () => new Promise((resolve) => server.close(resolve)) };
 }
 
-const validQuestion = { text: "  Which is a prime number? ", options: [" 4 ", " 5 "], correctAnswer: "5", questionPoolId: " pool-1 " };
+const validQuestion = { text: "  Which is a prime number? ", options: [" 4 ", " 5 "], correctAnswer: "5", questionPoolId: " pool-1 ", difficulty: "EASY" };
 
 test("teacher creates an objective question and can list it from its pool", async () => {
   const { call, repo, close } = await start();
@@ -51,6 +51,7 @@ test("teacher creates an objective question and can list it from its pool", asyn
     assert.deepEqual(created.body.question.options, ["4", "5"]);
     assert.equal(created.body.question.correctAnswer, "5");
     assert.equal(created.body.question.questionPoolId, "pool-1");
+    assert.equal(created.body.question.difficulty, "EASY");
     assert.equal(repo.questions.length, 1);
     const listed = await call("GET", "?questionPoolId=pool-1");
     assert.equal(listed.status, 200);
@@ -69,6 +70,34 @@ test("invalid question fields return 400 without persistence", async () => {
     assert.ok(result.body.details.correctAnswer);
     assert.ok(result.body.details.questionPoolId);
     assert.equal(repo.questions.length, 0);
+  } finally { await close(); }
+});
+
+test("difficulty is required and restricted to the documented implementation values", async () => {
+  const { call, repo, close } = await start();
+  try {
+    const missing = { ...validQuestion };
+    delete missing.difficulty;
+    const invalid = await call("POST", "/", { ...validQuestion, difficulty: "EXTREME" });
+    const absent = await call("POST", "/", missing);
+    assert.equal(invalid.status, 400);
+    assert.ok(invalid.body.details.difficulty);
+    assert.equal(absent.status, 400);
+    assert.ok(absent.body.details.difficulty);
+    assert.equal(repo.questions.length, 0);
+  } finally { await close(); }
+});
+
+test("all supported difficulties persist and are returned by the listing endpoint", async () => {
+  const { call, close } = await start();
+  try {
+    for (const difficulty of ["EASY", "MEDIUM", "HARD"]) {
+      const result = await call("POST", "/", { ...validQuestion, difficulty });
+      assert.equal(result.status, 201);
+      assert.equal(result.body.question.difficulty, difficulty);
+    }
+    const listed = await call("GET", "?questionPoolId=pool-1");
+    assert.deepEqual(listed.body.questions.map((question) => question.difficulty), ["EASY", "MEDIUM", "HARD"]);
   } finally { await close(); }
 });
 
@@ -102,7 +131,7 @@ test("Prisma question repository uses injected client and lists by pool", async 
   };
   const repo = createPrismaQuestionRepository({ getClient: () => prisma });
   await repo.findQuestionPoolById("pool-1");
-  await repo.createQuestion({ text: "Q?", options: ["a", "b"], correctAnswer: "a", questionPoolId: "pool-1" });
+  await repo.createQuestion({ text: "Q?", options: ["a", "b"], correctAnswer: "a", questionPoolId: "pool-1", difficulty: "EASY" });
   await repo.listQuestions("pool-1");
   assert.deepEqual(calls.map(([name]) => name), ["pool", "create", "list"]);
   assert.deepEqual(calls[2][1], { where: { questionPoolId: "pool-1" }, include: { questionPool: true }, orderBy: { createdAt: "asc" } });

@@ -16,9 +16,12 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-03, FR-23, FR-24 | | | Planned |
 | FR-04 | Automated | `server/test/exams.test.js` | Done |
 | FR-05 | Automated | `server/test/questions.test.js` | Done |
-| FR-06 to FR-21 | | | Planned |
+| FR-06 | Automated | `server/test/questions.test.js` | Done |
+| FR-07 to FR-21 | | | Planned |
 | NFR-02 to NFR-06, NFR-10 to NFR-12 | | | Planned |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
+
+FR-06 implementation proposal: accepted difficulty values are `EASY`, `MEDIUM`, and `HARD`; new question creation requires an explicit value and has no default. The FR-06 migration backfills pre-existing FR-05 questions as `MEDIUM` so the field can become required without dropping records.
 
 Run all server tests with `npm test` in `server/`. CI runs lint, build, syntax and schema checks on every pull request.
