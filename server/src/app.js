@@ -4,9 +4,13 @@ import { assertSecret } from "./auth/tokens.js";
 import { createLoginLimiter } from "./auth/rateLimiter.js";
 import { authenticate, requireRole } from "./middleware/auth.js";
 import { createAuthRouter } from "./routes/auth.js";
+import { createExamRouter } from "./routes/exams.js";
+import { createQuestionRouter } from "./routes/questions.js";
 
 export function createApp({
   userRepo,
+  examRepo,
+  questionRepo,
   jwtSecret,
   jwtExpiresIn = "1h",
   limiter = createLoginLimiter(),
@@ -31,6 +35,23 @@ export function createApp({
       limiter,
     })
   );
+
+  if (examRepo) {
+    app.use(
+      "/api/exams",
+      authenticate({ secret: jwtSecret }),
+      createExamRouter({ examRepo })
+    );
+  }
+
+  if (questionRepo) {
+    app.use(
+      "/api/questions",
+      authenticate({ secret: jwtSecret }),
+      requireRole("TEACHER", "ADMIN"),
+      createQuestionRouter({ questionRepo, examRepo })
+    );
+  }
 
   // Role-protected landing endpoints (NFR-01). Later sprints replace these
   // stubs with the real student, teacher and admin features.

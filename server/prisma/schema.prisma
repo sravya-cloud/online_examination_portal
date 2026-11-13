@@ -12,13 +12,87 @@ enum Role {
   ADMIN
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 // FR-01, FR-02, FR-22: one account table, separated by role.
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
   name         String
   passwordHash String
   role         Role
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  attempts     ExamAttempt[]
+}
+
+model QuestionPool {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  questions   Question[]
+  exams       Exam[]
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  poolId        String
+  pool          QuestionPool   @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  text          String
+  options       String[]
+  correctOption Int
+  difficulty    Difficulty     @default(MEDIUM)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  examQuestions ExamQuestion[]
+}
+
+model Exam {
+  id                String         @id @default(cuid())
+  title             String
+  questionCount     Int            @default(10)
+  durationMinutes   Int            @default(60)
+  startTime         DateTime?
+  endTime           DateTime?
+  isPublished       Boolean        @default(false)
+  publishedAt       DateTime?
+  resultReleaseTime DateTime?
+  questionPoolId    String
+  questionPool      QuestionPool   @relation(fields: [questionPoolId], references: [id], onDelete: Restrict)
+  questions         ExamQuestion[]
+  attempts          ExamAttempt[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model ExamQuestion {
+  id         String   @id @default(cuid())
+  examId     String
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  orderIndex Int      @default(0)
+
+  @@unique([examId, questionId])
+}
+
+model ExamAttempt {
+  id          String    @id @default(cuid())
+  examId      String
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Restrict)
+  studentId   Int
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  status      String    @default("SUBMITTED")
+  score       Int       @default(0)
+  totalMarks  Int       @default(0)
+  answers     Json?
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+
+  @@index([examId, studentId])
 }
