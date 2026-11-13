@@ -2,40 +2,32 @@ import { getPrisma } from "../db.js";
 
 export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
   return {
-    async findQuestionPoolById(id) {
-      return getClient().questionPool.findUnique({
-        where: { id },
-        include: { questions: true },
-      });
+    findQuestionPoolById(id) {
+      return getClient().questionPool.findUnique({ where: { id } });
     },
 
-    async createExam({
+    createExam({
       title,
       questionCount,
       questionPoolId,
-      durationMinutes = 60,
-      startTime = null,
-      endTime = null,
-      resultReleaseTime = null,
+      durationMinutes,
+      startTime,
+      endTime,
+      resultReleaseTime,
     }) {
+      const data = { title, questionCount, questionPoolId };
+      if (durationMinutes !== undefined) data.durationMinutes = durationMinutes;
+      if (startTime !== undefined) data.startTime = startTime ? new Date(startTime) : null;
+      if (endTime !== undefined) data.endTime = endTime ? new Date(endTime) : null;
+      if (resultReleaseTime !== undefined) data.resultReleaseTime = resultReleaseTime ? new Date(resultReleaseTime) : null;
+
       return getClient().exam.create({
-        data: {
-          title,
-          questionCount,
-          questionPoolId,
-          durationMinutes,
-          startTime: startTime ? new Date(startTime) : null,
-          endTime: endTime ? new Date(endTime) : null,
-          resultReleaseTime: resultReleaseTime ? new Date(resultReleaseTime) : null,
-        },
-        include: {
-          questionPool: true,
-          questions: { include: { question: true } },
-        },
+        data,
+        include: { questionPool: true },
       });
     },
 
-    async findExamById(id) {
+    findExamById(id) {
       return getClient().exam.findUnique({
         where: { id },
         include: {
@@ -49,7 +41,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
-    async listExams() {
+    listExams() {
       return getClient().exam.findMany({
         include: {
           questionPool: true,
@@ -59,7 +51,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
-    async updateExam(id, data) {
+    updateExam(id, data) {
       const updateData = { ...data };
       if (updateData.startTime !== undefined) {
         updateData.startTime = updateData.startTime ? new Date(updateData.startTime) : null;
@@ -83,10 +75,8 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
     async publishExam(id, selectedQuestionIds = []) {
       const prisma = getClient();
       return prisma.$transaction(async (tx) => {
-        // Clear any previous assignment if re-publishing draft
         await tx.examQuestion.deleteMany({ where: { examId: id } });
 
-        // Insert fixed question set
         if (selectedQuestionIds.length > 0) {
           await tx.examQuestion.createMany({
             data: selectedQuestionIds.map((qId, idx) => ({
@@ -142,7 +132,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       return count > 0;
     },
 
-    async listAttemptsByExam(examId) {
+    listAttemptsByExam(examId) {
       return getClient().examAttempt.findMany({
         where: { examId },
         include: { student: { select: { id: true, name: true, email: true } } },
@@ -150,13 +140,13 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
-    async findAttempt(examId, studentId) {
+    findAttempt(examId, studentId) {
       return getClient().examAttempt.findFirst({
         where: { examId, studentId },
       });
     },
 
-    async recordAttempt({ examId, studentId, score, totalMarks, answers = null }) {
+    recordAttempt({ examId, studentId, score, totalMarks, answers = null }) {
       return getClient().examAttempt.create({
         data: {
           examId,

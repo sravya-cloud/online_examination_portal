@@ -12,7 +12,7 @@ enum Role {
   ADMIN
 }
 
-enum Difficulty {
+enum QuestionDifficulty {
   EASY
   MEDIUM
   HARD
@@ -31,31 +31,17 @@ model User {
 }
 
 model QuestionPool {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  description String?
-  createdAt   DateTime   @default(now())
-  questions   Question[]
-  exams       Exam[]
-}
-
-model Question {
-  id            String         @id @default(cuid())
-  poolId        String
-  pool          QuestionPool   @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  text          String
-  options       String[]
-  correctOption Int
-  difficulty    Difficulty     @default(MEDIUM)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  examQuestions ExamQuestion[]
+  id        String     @id @default(cuid())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  exams     Exam[]
+  questions Question[]
 }
 
 model Exam {
   id                String         @id @default(cuid())
   title             String
-  questionCount     Int            @default(10)
+  questionCount     Int
   durationMinutes   Int            @default(60)
   startTime         DateTime?
   endTime           DateTime?
@@ -68,6 +54,21 @@ model Exam {
   attempts          ExamAttempt[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
+}
+
+model Question {
+  id             String             @id @default(cuid())
+  text           String
+  options        String[]
+  correctAnswer  String
+  difficulty     QuestionDifficulty
+  questionPoolId String
+  questionPool   QuestionPool       @relation(fields: [questionPoolId], references: [id], onDelete: Restrict)
+  examQuestions  ExamQuestion[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([questionPoolId, createdAt])
 }
 
 model ExamQuestion {
