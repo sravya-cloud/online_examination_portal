@@ -468,21 +468,108 @@ export function createExamRouter({ examRepo, questionRepo }) {
     }
   });
 
-  // Record an attempt
+  // Submit an attempt
   router.post("/:id/attempts", async (req, res) => {
+    // 1. Only students can submit
+    if (req.auth?.role !== "STUDENT") {
+      return res.status(403).json({ error: "Only students can submit examination attempts." });
+    }
+
+    // 5. The student id comes only from the login token
+    const studentId = req.auth?.userId;
+    if (!studentId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const { id } = req.params;
-    const studentId = req.auth?.userId || req.body?.studentId;
-    const { score, totalMarks, answers } = req.body ?? {};
+    const { answers } = req.body ?? {};
 
     try {
+      const exam = await examRepo.findExamById(id);
+      if (!exam) {
+        return res.status(404).json({ error: "Examination not found." });
+      }
+
+      // 3. The exam must be published and current time must be inside its availability window
+      if (!exam.isPublished) {
+        return res.status(403).json({ error: "Examination is not published." });
+      }
+
+      const now = Date.now();
+      if (exam.startTime && now < new Date(exam.startTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination is not yet available.",
+          startTime: exam.startTime,
+        });
+      }
+      if (exam.endTime && now > new Date(exam.endTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination availability period has ended.",
+          endTime: exam.endTime,
+        });
+      }
+
+      // 4. A student can only submit once per exam
+      const existingAttempt = await examRepo.findAttempt(id, studentId);
+      if (existingAttempt) {
+        return res.status(409).json({ error: "You have already submitted an attempt for this examination." });
+      }
+
+      // 2. The server compares the submitted answers with the correct answers and works out the score itself
+      const questions = (await examRepo.getExamQuestions(id)) || [];
+      const totalMarks = questions.length;
+      let calculatedScore = 0;
+
+      let answerMap = {};
+      if (answers && typeof answers === "object") {
+        if (Array.isArray(answers)) {
+          answers.forEach((item) => {
+            if (item && item.questionId !== undefined) {
+              answerMap[item.questionId] = item.answer !== undefined ? item.answer : item.selectedAnswer;
+            }
+          });
+        } else {
+          answerMap = { ...answers };
+        }
+      }
+
+      for (const q of questions) {
+        const studentAns = answerMap[q.id];
+        if (studentAns !== undefined && studentAns !== null) {
+          const targetAnswer = q.correctAnswer !== undefined ? q.correctAnswer : (
+            Array.isArray(q.options) && typeof q.correctOption === "number"
+              ? q.options[q.correctOption]
+              : q.correctOption
+          );
+
+          if (targetAnswer !== undefined && targetAnswer !== null) {
+            if (String(studentAns).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()) {
+              calculatedScore += 1;
+            } else if (
+              typeof studentAns === "number" &&
+              Array.isArray(q.options) &&
+              studentAns >= 0 &&
+              studentAns < q.options.length &&
+              String(q.options[studentAns]).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()
+            ) {
+              calculatedScore += 1;
+            }
+          }
+        }
+      }
+
       const attempt = await examRepo.recordAttempt({
         examId: id,
         studentId,
-        score: score ?? 0,
-        totalMarks: totalMarks ?? 0,
-        answers: answers ?? null,
+        score: calculatedScore,
+        totalMarks,
+        answers: answerMap,
       });
-      return res.status(201).json({ message: "Attempt recorded.", attempt });
+
+      return res.status(201).json({
+        message: "Attempt recorded successfully.",
+        attempt,
+      });
     } catch (error) {
       console.error("Record attempt failed:", error);
       return res.status(500).json({ error: "Unable to record attempt." });

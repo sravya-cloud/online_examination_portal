@@ -15,11 +15,11 @@ function makeFakeRepositories() {
       id: "pool-math",
       name: "Mathematics Pool",
       questions: [
-        { id: "q1", poolId: "pool-math", text: "What is 2+2?", options: ["2", "3", "4", "5"], correctOption: 2, difficulty: "EASY" },
-        { id: "q2", poolId: "pool-math", text: "What is 5*5?", options: ["10", "20", "25", "30"], correctOption: 2, difficulty: "EASY" },
-        { id: "q3", poolId: "pool-math", text: "What is sqrt(16)?", options: ["2", "4", "8", "16"], correctOption: 1, difficulty: "MEDIUM" },
-        { id: "q4", poolId: "pool-math", text: "What is 12/4?", options: ["2", "3", "4", "6"], correctOption: 1, difficulty: "EASY" },
-        { id: "q5", poolId: "pool-math", text: "What is 2^3?", options: ["6", "8", "9", "12"], correctOption: 1, difficulty: "HARD" },
+        { id: "q1", poolId: "pool-math", text: "What is 2+2?", options: ["2", "3", "4", "5"], correctAnswer: "4", correctOption: 2, difficulty: "EASY" },
+        { id: "q2", poolId: "pool-math", text: "What is 5*5?", options: ["10", "20", "25", "30"], correctAnswer: "25", correctOption: 2, difficulty: "EASY" },
+        { id: "q3", poolId: "pool-math", text: "What is sqrt(16)?", options: ["2", "4", "8", "16"], correctAnswer: "4", correctOption: 1, difficulty: "MEDIUM" },
+        { id: "q4", poolId: "pool-math", text: "What is 12/4?", options: ["2", "3", "4", "6"], correctAnswer: "3", correctOption: 1, difficulty: "EASY" },
+        { id: "q5", poolId: "pool-math", text: "What is 2^3?", options: ["6", "8", "9", "12"], correctAnswer: "8", correctOption: 1, difficulty: "HARD" },
       ],
     },
   ];
@@ -289,6 +289,217 @@ test("FR-20: Teachers and Administrators can view examination reports with stati
     const adminRes = await request(`/api/exams/${exam.id}/report`, { token: adminToken });
     assert.equal(adminRes.status, 200);
     assert.equal(adminRes.body.report.statistics.totalAttempts, 3);
+  } finally {
+    await close();
+  }
+});
+
+// --------------------------------------------------------------------------
+// Tests for Attempt Submission Security & Server-Side Scoring
+// --------------------------------------------------------------------------
+
+test("Attempt submission: only students can submit (teachers, admins, and unauthenticated rejected)", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const exam = await repos.examRepo.createExam({
+      title: "Physics Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+    });
+
+    const teacherToken = tokenFor("TEACHER", 1);
+    const adminToken = tokenFor("ADMIN", 2);
+
+    // 1. Teacher cannot submit
+    const teacherRes = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: teacherToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(teacherRes.status, 403);
+    assert.equal(teacherRes.body.error, "Only students can submit examination attempts.");
+
+    // 2. Admin cannot submit
+    const adminRes = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: adminToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(adminRes.status, 403);
+    assert.equal(adminRes.body.error, "Only students can submit examination attempts.");
+
+    // 3. Unauthenticated cannot submit
+    const unauthRes = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(unauthRes.status, 401);
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt submission: server compares submitted answers with correct answers and computes score itself", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const studentToken = tokenFor("STUDENT", 601);
+    const exam = await repos.examRepo.createExam({
+      title: "Arithmetic Exam",
+      questionCount: 3,
+      questionPoolId: "pool-math",
+    });
+
+    // Student attempts to submit with a forged score: 100
+    // Correct answers in pool-math: q1: "4", q2: "25", q3: "4"
+    // Student provides: q1: "4" (correct), q2: "25" (correct), q3: "999" (wrong)
+    const res = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: {
+        answers: { q1: "4", q2: "25", q3: "999" },
+        score: 100,      // Forged score
+        totalMarks: 500, // Forged totalMarks
+      },
+    });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.message, "Attempt recorded successfully.");
+    // Server must compute score itself: 2 correct out of 3 questions
+    assert.equal(res.body.attempt.score, 2);
+    assert.equal(res.body.attempt.totalMarks, 3);
+
+    // Verify stored attempt in repository has calculated score
+    const stored = await repos.examRepo.findAttempt(exam.id, 601);
+    assert.equal(stored.score, 2);
+    assert.equal(stored.totalMarks, 3);
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt submission: exam must be published and within availability window", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const studentToken = tokenFor("STUDENT", 602);
+
+    // 1. Unpublished exam
+    const unpublishedExam = await repos.examRepo.createExam({
+      title: "Draft Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+    });
+    // Set isPublished to false
+    unpublishedExam.isPublished = false;
+
+    const unpubRes = await request(`/api/exams/${unpublishedExam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(unpubRes.status, 403);
+    assert.equal(unpubRes.body.error, "Examination is not published.");
+
+    // 2. Exam before availability start time
+    const futureExam = await repos.examRepo.createExam({
+      title: "Future Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      startTime: new Date(Date.now() + 3600000).toISOString(),
+      endTime: new Date(Date.now() + 7200000).toISOString(),
+    });
+
+    const futureRes = await request(`/api/exams/${futureExam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(futureRes.status, 403);
+    assert.equal(futureRes.body.error, "Examination is not yet available.");
+
+    // 3. Exam after availability end time
+    const pastExam = await repos.examRepo.createExam({
+      title: "Expired Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      startTime: new Date(Date.now() - 7200000).toISOString(),
+      endTime: new Date(Date.now() - 3600000).toISOString(),
+    });
+
+    const pastRes = await request(`/api/exams/${pastExam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(pastRes.status, 403);
+    assert.equal(pastRes.body.error, "Examination availability period has ended.");
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt submission: a student can only submit once per exam", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const studentToken = tokenFor("STUDENT", 603);
+    const exam = await repos.examRepo.createExam({
+      title: "One-Time Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+    });
+
+    // First attempt succeeds
+    const firstRes = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(firstRes.status, 201);
+
+    // Second attempt by same student rejected with 409 Conflict
+    const secondRes = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+    assert.equal(secondRes.status, 409);
+    assert.equal(secondRes.body.error, "You have already submitted an attempt for this examination.");
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt submission: student id comes only from login token (ignoring body spoofing)", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const realStudentId = 777;
+    const studentToken = tokenFor("STUDENT", realStudentId);
+
+    const exam = await repos.examRepo.createExam({
+      title: "Integrity Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+    });
+
+    // Student tries to spoof studentId: 999 in body
+    const res = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: {
+        answers: { q1: "4" },
+        studentId: 999, // Attempted spoof
+      },
+    });
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.attempt.studentId, realStudentId);
+
+    // Stored attempt must belong to realStudentId, not 999
+    const spoofedLookup = await repos.examRepo.findAttempt(exam.id, 999);
+    assert.equal(spoofedLookup, null);
+
+    const realLookup = await repos.examRepo.findAttempt(exam.id, realStudentId);
+    assert.ok(realLookup);
+    assert.equal(realLookup.studentId, realStudentId);
   } finally {
     await close();
   }

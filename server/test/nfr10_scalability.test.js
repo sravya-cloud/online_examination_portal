@@ -31,6 +31,9 @@ test("NFR-10: System handles concurrent users without workflow interruption (VAL
     async getExamQuestions(id) {
       return id === exam.id ? questions : [];
     },
+    async findAttempt(examId, studentId) {
+      return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
+    },
     async recordAttempt({ examId, studentId, score, totalMarks }) {
       const att = { id: `att-${attempts.length + 1}`, examId, studentId, score, totalMarks, submittedAt: new Date() };
       attempts.push(att);
@@ -75,7 +78,7 @@ test("NFR-10: System handles concurrent users without workflow interruption (VAL
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ score: 2, totalMarks: 2 }),
+        body: JSON.stringify({ answers: { q1: "A", q2: "B" } }),
       });
       const data = await res.json();
       assert.equal(res.status, 201);
