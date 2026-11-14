@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PORTALS, fetchDashboard } from './auth.js'
+import TeacherExamManagement from './TeacherExamManagement.jsx'
 
 export default function Dashboard({ session, onLogout }) {
   const { user, token } = session
@@ -31,7 +32,16 @@ export default function Dashboard({ session, onLogout }) {
       <p>Welcome, {user.name}.</p>
       {status === 'loading' && <p>Loading…</p>}
       {status === 'error' && <p className="form-error">Could not load the dashboard.</p>}
-      {status === 'ready' && <p>Your features will appear here in the next sprint.</p>}
+      {status === 'ready' && (
+        <>
+          {(user.role === 'TEACHER' || user.role === 'ADMIN') && (
+            <TeacherExamManagement token={token} />
+          )}
+          {user.role === 'STUDENT' && (
+            <p>Your examinations and result status will be displayed here.</p>
+          )}
+        </>
+      )}
     </main>
   )
 }

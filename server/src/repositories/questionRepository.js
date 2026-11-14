@@ -5,17 +5,39 @@ export function createPrismaQuestionRepository({ getClient = getPrisma } = {}) {
     findQuestionPoolById(id) {
       return getClient().questionPool.findUnique({ where: { id } });
     },
+
     createQuestion({ text, options, correctAnswer, questionPoolId, difficulty }) {
       return getClient().question.create({
         data: { text, options, correctAnswer, questionPoolId, difficulty },
         include: { questionPool: true },
       });
     },
+
     listQuestions(questionPoolId) {
       return getClient().question.findMany({
         where: { questionPoolId },
         include: { questionPool: true },
         orderBy: { createdAt: "asc" },
+      });
+    },
+
+    findQuestionById(id) {
+      return getClient().question.findUnique({
+        where: { id },
+        include: { questionPool: true },
+      });
+    },
+
+    updateQuestion(id, data) {
+      return getClient().question.update({
+        where: { id },
+        data,
+      });
+    },
+
+    deleteQuestion(id) {
+      return getClient().question.delete({
+        where: { id },
       });
     },
   };

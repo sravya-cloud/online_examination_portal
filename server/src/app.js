@@ -36,19 +36,22 @@ export function createApp({
     })
   );
 
-  app.use(
-    "/api/exams",
-    authenticate({ secret: jwtSecret }),
-    requireRole("TEACHER"),
-    createExamRouter({ examRepo })
-  );
+  if (examRepo) {
+    app.use(
+      "/api/exams",
+      authenticate({ secret: jwtSecret }),
+      createExamRouter({ examRepo, questionRepo })
+    );
+  }
 
-  app.use(
-    "/api/questions",
-    authenticate({ secret: jwtSecret }),
-    requireRole("TEACHER"),
-    createQuestionRouter({ questionRepo })
-  );
+  if (questionRepo) {
+    app.use(
+      "/api/questions",
+      authenticate({ secret: jwtSecret }),
+      requireRole("TEACHER"),
+      createQuestionRouter({ questionRepo, examRepo })
+    );
+  }
 
   // Role-protected landing endpoints (NFR-01). Later sprints replace these
   // stubs with the real student, teacher and admin features.
