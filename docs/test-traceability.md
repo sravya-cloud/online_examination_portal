@@ -16,12 +16,13 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-08 Configure exam duration and availability period | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F04: duration, start/end times persisted and validated) | Done |
 | FR-09 Random selection of questions from pool | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F05: uniform selection of N questions) | Done |
 | FR-10 Same question set for all students | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F05: question set fixed across student attempts) | Done |
+| FR-11 Shuffle question order | Automated | `server/test/fr11_shuffle.test.js` (VAL-F06: stable per-attempt shuffle, same selected set, and associated question data) | Done |
 | NFR-01 Authenticated access and roles | Automated | `server/test/auth.test.js` (401, 403, expired and tampered tokens, rate limit) | Done |
 | NFR-07 Modularity | Review + automated | `docs/architecture-modules.md`, tests with fake repository | Done |
 | NFR-08 Browser compatibility | Manual | `docs/browser-compatibility.md` | Done |
 | NFR-09 Testability | Review | This table | Done |
 | FR-03, FR-23, FR-24 | | | Planned |
-| Other FRs (FR-11 to FR-21) | | | Planned |
+| Other FRs (FR-12 to FR-21) | | | Planned |
 | Other NFRs (NFR-02 to NFR-06, NFR-10 to NFR-12) | | | Planned |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
