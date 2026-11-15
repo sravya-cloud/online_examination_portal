@@ -92,6 +92,7 @@ model ExamAttempt {
   score       Int       @default(0)
   totalMarks  Int       @default(0)
   answers     Json?
+  evaluation  Json?
   startedAt   DateTime  @default(now())
   submittedAt DateTime?
 

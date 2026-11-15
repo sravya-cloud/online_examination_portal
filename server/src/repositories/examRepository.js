@@ -179,11 +179,26 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
 
     startAttempt({ examId, studentId, startedAt = new Date() }) {
       return getClient().examAttempt.create({
+        data: { examId, studentId, status: "IN_PROGRESS", startedAt },
+      });
+    },
+
+    findActiveAttempt(examId, studentId) {
+      return getClient().examAttempt.findFirst({
+        where: { examId, studentId, status: "IN_PROGRESS" },
+        orderBy: { startedAt: "desc" },
+      });
+    },
+
+    createActiveAttempt(examId, studentId) {
+      return getClient().examAttempt.create({
         data: {
           examId,
           studentId,
           status: "IN_PROGRESS",
-          startedAt,
+          score: 0,
+          totalMarks: 0,
+          answers: {},
         },
       });
     },
@@ -222,6 +237,35 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
           submittedAt: new Date(),
         },
       });
+    },
+
+    findStudentAttempt(attemptId, examId, studentId) {
+      return getClient().examAttempt.findFirst({
+        where: { id: attemptId, examId, studentId },
+      });
+    },
+
+    async saveAttemptAnswers(attemptId, answers) {
+      const result = await getClient().examAttempt.updateMany({
+        where: { id: attemptId, status: "IN_PROGRESS" },
+        data: { answers },
+      });
+      return result.count === 1;
+    },
+
+    async submitActiveAttempt(attemptId, { score, totalMarks, evaluation }) {
+      const result = await getClient().examAttempt.updateMany({
+        where: { id: attemptId, status: "IN_PROGRESS" },
+        data: {
+          status: "SUBMITTED",
+          submittedAt: new Date(),
+          score,
+          totalMarks,
+          evaluation,
+        },
+      });
+      if (result.count !== 1) return null;
+      return getClient().examAttempt.findUnique({ where: { id: attemptId } });
     },
   };
 }
