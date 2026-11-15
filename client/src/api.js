@@ -1,3 +1,13 @@
+export async function fetchAvailableExams(token) {
+  const res = await fetch('/api/student/exams', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Failed to load available exams')
+  return data
+}
+
 export async function fetchExams(token) {
   const res = await fetch('/api/exams', {
     headers: { Authorization: `Bearer ${token}` },
