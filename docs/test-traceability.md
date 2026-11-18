@@ -12,6 +12,7 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-04 Create examinations | Automated | `server/test/exams.test.js` | Done |
 | FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` | Done |
 | FR-06 Assign difficulty level to questions | Automated | `server/test/questions.test.js` | Done |
+| NFR-02 Reliability: no loss of submitted data | PostgreSQL integration | `server/test/nfr02_reliability.test.js` (attempt and answer JSON persist after disconnecting and reconnecting a Prisma client) | Done |
 | FR-07 Edit or remove questions before publishing | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F13: editable before publish, blocked after publish) | Done |
 | FR-08 Configure exam duration and availability period | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F04: duration, start/end times persisted and validated) | Done |
 | FR-09 Random selection of questions from pool | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F05: uniform selection of N questions) | Done |
