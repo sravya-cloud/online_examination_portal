@@ -108,9 +108,36 @@ function makeFakeRepositories() {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
     },
 
-    async recordAttempt(data) {
+    async startAttempt({ examId, studentId, startedAt = new Date() }) {
+      const existing = attempts.find((a) => a.examId === examId && a.studentId === studentId);
+      if (existing) return existing;
       const attempt = {
         id: `att-${attempts.length + 1}`,
+        examId,
+        studentId,
+        status: "IN_PROGRESS",
+        startedAt,
+      };
+      attempts.push(attempt);
+      return attempt;
+    },
+
+    async recordAttempt(data) {
+      const existingIndex = attempts.findIndex(
+        (a) => a.examId === data.examId && a.studentId === data.studentId && a.status === "IN_PROGRESS"
+      );
+      if (existingIndex !== -1) {
+        attempts[existingIndex] = {
+          ...attempts[existingIndex],
+          ...data,
+          status: "SUBMITTED",
+          submittedAt: new Date(),
+        };
+        return attempts[existingIndex];
+      }
+      const attempt = {
+        id: `att-${attempts.length + 1}`,
+        status: "SUBMITTED",
         ...data,
         submittedAt: new Date(),
       };
@@ -500,6 +527,93 @@ test("Attempt submission: student id comes only from login token (ignoring body 
     const realLookup = await repos.examRepo.findAttempt(exam.id, realStudentId);
     assert.ok(realLookup);
     assert.equal(realLookup.studentId, realStudentId);
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt start: only students can start examinations (FR-08 duration enforcement)", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const exam = await repos.examRepo.createExam({
+      title: "Duration Gated Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      durationMinutes: 30,
+    });
+
+    // Unauthenticated
+    const unauthRes = await request(`/api/exams/${exam.id}/start`, { method: "POST" });
+    assert.equal(unauthRes.status, 401);
+
+    // Teacher
+    const teacherRes = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: tokenFor("TEACHER", 10),
+    });
+    assert.equal(teacherRes.status, 403);
+
+    // Student starts successfully
+    const studentRes = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: tokenFor("STUDENT", 501),
+    });
+    assert.equal(studentRes.status, 201);
+    assert.equal(studentRes.body.message, "Examination started.");
+    assert.ok(studentRes.body.attempt.startedAt);
+  } finally {
+    await close();
+  }
+});
+
+test("Attempt duration enforcement: submissions within duration succeed, late submissions are rejected", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const onTimeStudent = 801;
+    const lateStudent = 802;
+    const durationMins = 30;
+
+    const exam = await repos.examRepo.createExam({
+      title: "Strict Timed Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      durationMinutes: durationMins,
+    });
+
+    // 1. On-time student started 5 mins ago
+    const startOnTime = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: tokenFor("STUDENT", onTimeStudent),
+      body: { startedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
+    });
+    assert.equal(startOnTime.status, 201);
+
+    // Submits on time
+    const submitOnTime = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: tokenFor("STUDENT", onTimeStudent),
+      body: { answers: { q1: "4", q2: "6" } },
+    });
+    assert.equal(submitOnTime.status, 201);
+    assert.equal(submitOnTime.body.attempt.status, "SUBMITTED");
+
+    // 2. Late student started 35 minutes ago (duration is 30 mins, exceeded past grace period)
+    const thirtyFiveMinsAgo = new Date(Date.now() - 35 * 60 * 1000).toISOString();
+    const startLate = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: tokenFor("STUDENT", lateStudent),
+      body: { startedAt: thirtyFiveMinsAgo },
+    });
+    assert.equal(startLate.status, 201);
+
+    // Attempting late submission
+    const submitLate = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: tokenFor("STUDENT", lateStudent),
+      body: { answers: { q1: "4", q2: "6" } },
+    });
+    assert.equal(submitLate.status, 403);
+    assert.ok(submitLate.body.error.includes("Examination duration has expired"));
   } finally {
     await close();
   }

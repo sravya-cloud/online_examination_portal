@@ -146,13 +146,39 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
+    startAttempt({ examId, studentId, startedAt = new Date() }) {
+      return getClient().examAttempt.create({
+        data: {
+          examId,
+          studentId,
+          status: "IN_PROGRESS",
+          startedAt,
+        },
+      });
+    },
+
     countAttemptsByStudent(examId, studentId) {
       return getClient().examAttempt.count({
         where: { examId, studentId },
       });
     },
 
-    recordAttempt({ examId, studentId, score, totalMarks, answers = null }) {
+    async recordAttempt({ examId, studentId, score, totalMarks, answers = null, startedAt = null }) {
+      const existing = await getClient().examAttempt.findFirst({
+        where: { examId, studentId, status: "IN_PROGRESS" },
+      });
+      if (existing) {
+        return getClient().examAttempt.update({
+          where: { id: existing.id },
+          data: {
+            status: "SUBMITTED",
+            score,
+            totalMarks,
+            answers,
+            submittedAt: new Date(),
+          },
+        });
+      }
       return getClient().examAttempt.create({
         data: {
           examId,
@@ -161,6 +187,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
           score,
           totalMarks,
           answers,
+          startedAt: startedAt || new Date(),
           submittedAt: new Date(),
         },
       });
