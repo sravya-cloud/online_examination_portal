@@ -1,5 +1,5 @@
 import express from "express";
-import { selectRandomQuestions } from "../services/questionSelection.js";
+import { selectRandomQuestions, shuffleQuestionsForAttempt } from "../services/questionSelection.js";
 
 export function createExamRouter({ examRepo, questionRepo }) {
   const router = express.Router();
@@ -313,7 +313,18 @@ export function createExamRouter({ examRepo, questionRepo }) {
         }
       }
 
-      const questions = await examRepo.getExamQuestions(id);
+      let questions = await examRepo.getExamQuestions(id);
+
+      // FR-11: Give each student attempt a stable shuffled presentation order.
+      // The stored ExamQuestion order remains the common fixed set (FR-10).
+      if (isStudent && typeof examRepo.countAttemptsByStudent === "function") {
+        const studentId = req.auth?.userId;
+        const completedAttempts = await examRepo.countAttemptsByStudent(id, studentId);
+        questions = shuffleQuestionsForAttempt(
+          questions,
+          `${id}:${studentId}:${completedAttempts}`
+        );
+      }
 
       const payload = isStudent
         ? questions.map(({ id, text, options, difficulty }) => ({

@@ -29,3 +29,43 @@ export function selectRandomQuestions(questions, count, randomFn = Math.random) 
 
   return pool.slice(0, count);
 }
+
+function createSeededRandom(seed) {
+  let state = 2166136261;
+  for (const character of String(seed)) {
+    state = Math.imul(state ^ character.charCodeAt(0), 16777619);
+  }
+
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Shuffles a fixed exam question set into a stable order for one attempt.
+ * The input array and its question objects are not modified.
+ *
+ * @param {Array} questions - The question set already selected for the exam
+ * @param {string|number} attemptKey - Stable key for this student's exam attempt
+ * @returns {Array} A shuffled copy of the same question set
+ */
+export function shuffleQuestionsForAttempt(questions, attemptKey) {
+  if (!Array.isArray(questions)) {
+    throw new TypeError("Questions must be an array.");
+  }
+  if (attemptKey === undefined || attemptKey === null || String(attemptKey).length === 0) {
+    throw new TypeError("An attempt key is required to shuffle questions.");
+  }
+
+  const shuffled = [...questions];
+  const random = createSeededRandom(attemptKey);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
