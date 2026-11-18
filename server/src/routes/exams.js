@@ -482,19 +482,35 @@ export function createExamRouter({ examRepo, questionRepo }) {
 
   // Record an attempt
   router.post("/:id/attempts", async (req, res) => {
+    if (req.auth?.role !== "STUDENT") {
+      return res.status(403).json({ error: "Only students can record examination attempts." });
+    }
+
     const { id } = req.params;
-    const studentId = req.auth?.userId || req.body?.studentId;
-    const { answers } = req.body ?? {};
+    const studentId = req.auth.userId;
+    const { answers = {} } = req.body ?? {};
+
+    if (answers === null || typeof answers !== "object" || Array.isArray(answers)) {
+      return res.status(400).json({ error: "Answers must be an object keyed by question ID." });
+    }
 
     try {
       const questions = await examRepo.getExamQuestions(id);
-      const { score, totalMarks } = scoreObjectiveAnswers(questions, answers ?? {});
+      const selectedById = new Map(questions.map((question) => [question.id, question]));
+      for (const [questionId, answer] of Object.entries(answers)) {
+        const question = selectedById.get(questionId);
+        if (!question || typeof answer !== "string" || !question.options.includes(answer)) {
+          return res.status(400).json({ error: "Answers must reference selected exam questions and valid options." });
+        }
+      }
+
+      const { score, totalMarks } = scoreObjectiveAnswers(questions, answers);
       const attempt = await examRepo.recordAttempt({
         examId: id,
         studentId,
         score,
         totalMarks,
-        answers: answers ?? null,
+        answers,
       });
       return res.status(201).json({ message: "Attempt recorded.", attempt });
     } catch (error) {
