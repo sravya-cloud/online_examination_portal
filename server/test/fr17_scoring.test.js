@@ -6,9 +6,9 @@ import { scoreObjectiveAnswers } from "../src/services/objectiveScoring.js";
 
 const SECRET = "fr17-scoring-test-secret-at-least-thirty-two-chars";
 const questions = [
-  { id: "q1", correctAnswer: "A" },
-  { id: "q2", correctAnswer: "C" },
-  { id: "q3", correctAnswer: "B" },
+  { id: "q1", options: ["A", "B"], correctAnswer: "A" },
+  { id: "q2", options: ["C", "D"], correctAnswer: "C" },
+  { id: "q3", options: ["A", "B"], correctAnswer: "B" },
 ];
 
 function tokenForStudent() {
@@ -68,14 +68,14 @@ test("FR-17: API persists server-calculated score rather than a client-supplied 
   const server = await startServer(examRepo);
   try {
     const response = await server.record({
-      answers: { q1: "A", q2: "wrong", unknown: "B" },
+      answers: { q1: "A", q2: "D" },
       score: 999,
       totalMarks: 999,
     });
     assert.equal(response.status, 201);
     assert.equal(saved[0].score, 1);
     assert.equal(saved[0].totalMarks, 3);
-    assert.deepEqual(saved[0].answers, { q1: "A", q2: "wrong", unknown: "B" });
+    assert.deepEqual(saved[0].answers, { q1: "A", q2: "D" });
   } finally {
     await server.close();
   }

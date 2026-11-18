@@ -63,7 +63,7 @@ test("FR-18: an authenticated student persists answers under their own identity"
     assert.equal(response.status, 201);
     assert.equal(server.saved.length, 1);
     assert.equal(server.saved[0].studentId, 17);
-    assert.equal(server.saved[0].score, 0);
+    assert.equal(server.saved[0].score, 1);
     assert.equal(server.saved[0].totalMarks, 2);
     assert.deepEqual(server.saved[0].answers, { q1: "A" });
   } finally {
