@@ -146,6 +146,12 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
+    countAttemptsByStudent(examId, studentId) {
+      return getClient().examAttempt.count({
+        where: { examId, studentId },
+      });
+    },
+
     recordAttempt({ examId, studentId, score, totalMarks, answers = null }) {
       return getClient().examAttempt.create({
         data: {
