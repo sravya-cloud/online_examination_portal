@@ -2,7 +2,8 @@ import express from "express";
 import { selectRandomQuestions, shuffleQuestionsForAttempt } from "../services/questionSelection.js";
 import { evaluateObjectiveAnswers } from "../services/objectiveScoring.js";
 
-export function createExamRouter({ examRepo, questionRepo }) {
+export function createExamRouter({ examRepo, questionRepo, audit, permissions }) {
+  const log = (...args) => (audit ? audit.log(...args) : undefined);
   const router = express.Router();
 
   // Helper to validate duration and availability period (FR-08)
@@ -123,6 +124,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
       if (timing.parsedRelease !== undefined) examPayload.resultReleaseTime = timing.parsedRelease;
 
       const exam = await examRepo.createExam(examPayload);
+      await log(req, "exam.create", "Exam", exam?.id, { title: examPayload.title });
 
       return res.status(201).json({
         message: "Examination created successfully.",
@@ -275,6 +277,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
 
       const selectedQuestionIds = selectedQuestions.map((q) => q.id);
       const publishedExam = await examRepo.publishExam(id, selectedQuestionIds);
+      await log(req, "exam.publish", "Exam", id, { questions: selectedQuestionIds.length });
 
       return res.status(200).json({
         message: "Examination published successfully. Fixed question set assigned.",
@@ -407,7 +410,10 @@ export function createExamRouter({ examRepo, questionRepo }) {
 
   // FR-20: View examination reports (VAL-F14)
   router.get("/:id/report", async (req, res) => {
-    if (req.auth?.role !== "TEACHER" && req.auth?.role !== "ADMIN") {
+    const canViewReports = permissions
+      ? await permissions.has(req.auth?.role, "report.view")
+      : req.auth?.role === "TEACHER" || req.auth?.role === "ADMIN";
+    if (!canViewReports) {
       return res.status(403).json({
         error: "Forbidden: only teachers and administrators may view examination reports.",
       });
@@ -666,6 +672,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
         evaluation,
         startedAt: existingAttempt?.startedAt,
       });
+      await log(req, "attempt.submit", "Exam", id, { score, totalMarks });
 
       return res.status(201).json({
         message: "Attempt recorded successfully.",

@@ -30,6 +30,37 @@ model User {
   attempts     ExamAttempt[]
 }
 
+// NFR-12: who did what and when.
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?
+  action     String
+  entityType String
+  entityId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+// FR-23: approved system settings, stored as text.
+model SystemSetting {
+  key         String   @id
+  value       String
+  updatedById Int?
+  updatedAt   DateTime @updatedAt
+}
+
+// FR-24: changes to the default permissions of a role.
+model RolePermission {
+  role       Role
+  permission String
+  granted    Boolean
+
+  @@id([role, permission])
+}
+
 model QuestionPool {
   id        String     @id @default(cuid())
   name      String     @unique

@@ -53,8 +53,7 @@ The system consists of five main actors:
 - Authenticate users.
 - Support secure login and access control.
 
-### 5. Notification Service
-- Handle system notifications related to examination activities.
+Notifications are outside the Phase 1 scope.
 
 ---
 
@@ -73,27 +72,21 @@ The following examination rules are defined in the Phase 1 requirements:
 ## ⚙️ Main Features
 
 ### Student Module
-- User authentication.
-- View available examinations.
-- Start examinations.
-- Answer examination questions.
-- Submit examinations.
-- View examination results.
-- Receive relevant notifications.
+- Log in through the student portal (FR-01).
+- See the examinations that are currently available (FR-21).
+- Start an exam, answer questions in a per-attempt shuffled order, and submit manually or automatically when time ends (FR-11 to FR-15).
+- Answers are scored on the server; results appear only after the configured release time (FR-16 to FR-19).
 
 ### Teacher Module
-- Create examinations.
-- Update examination details.
-- Manage the question bank.
-- Add, update, and remove questions.
-- Configure examination settings.
-- View examination reports.
+- Add questions to a question pool with a difficulty level, and edit or remove them until the exam is published (FR-05 to FR-07).
+- Create exams with duration, availability window and result release time, then publish them to fix the question set (FR-04, FR-08 to FR-10).
+- View examination reports (FR-20).
 
 ### Administrator Module
-- Manage users.
-- Manage roles and permissions.
-- Manage system settings.
-- Control administrative access.
+- Create users, change roles, and disable or enable accounts (FR-03).
+- Change approved system settings (FR-23).
+- Change what each role is allowed to do (FR-24).
+- Review the audit log of administrator and exam actions (NFR-12).
 
 ### Security
 - Authentication and authorization.
@@ -123,38 +116,28 @@ The selected technologies for the project are:
 
 ## 📁 Project Structure
 
-The repository is organized as follows:
-
 ```text
 online_examination_portal/
-│
-├── 1-SRS-and-Work-Breakdown/
-├── 2-Test-Planning/
-├── 3-Requirements-Engineering/
-├── 4-Design-and-Architecture/
-├── 5-GitHub-and-Jira-Evidence/
-├── 6-GitHub-Copilot/
-├── 7-Software-Testing-and-Bug-Fixes/
-├── 8-Deployment-and-Environment/
-├── 9-Demo/
-│
-├── client/                  # React frontend
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── server/                  # Express backend
-│   ├── src/
-│   │   └── index.js
-│   ├── prisma/
-│   │   └── schema.prisma
-│   ├── prisma.config.ts
-│   └── package.json
-│
-├── docs/                    # Additional project documents
+├── .github/workflows/          # CI on pushes and pull requests
+├── client/                     # React + Vite frontend
+│   └── src/
+├── server/                     # Express API and Prisma/PostgreSQL
+│   ├── prisma/                 # Schema, migrations, and seed
+│   ├── src/                    # Routes, repositories, services, auth
+│   └── test/                   # Backend automated tests
+├── docs/
+│   ├── requirements/           # SRS, requirements, and RTM
+│   ├── planning/               # Product and sprint backlogs
+│   ├── architecture/           # SAD, diagrams, and module guide
+│   ├── testing/                # Test plan, traceability, validation
+│   ├── project/                # Deviations and freeze checklist
+│   └── demo/                   # Demo script
+├── output/pdf/                 # Final submission PDF copies; original PDFs remain in docs/
 ├── .gitignore
 └── README.md
 ```
+
+Submission evidence and deployment materials should be added alongside their actual deliverables; empty placeholder files are not used.
 
 ---
 
@@ -232,7 +215,21 @@ The backend will run at:
 
 `http://localhost:5000`
 
-### 3. Backend Health Check
+### 3. Database, demo accounts and tests
+
+In `server/`, copy `.env.example` to `.env` and fill in `DATABASE_URL`, `JWT_SECRET` (32+ characters) and `SEED_PASSWORD` (8+ characters). Each team member uses their own database and `.env`; never commit it or share the connection string.
+
+```bash
+cd server
+npx prisma generate
+npx prisma migrate deploy
+npm run seed
+npm test
+```
+
+`npm run seed` creates `student@example.com`, `teacher@example.com` and `admin@example.com`, all with the seed password. Log in through the portal that matches the role.
+
+### 4. Backend Health Check
 
 To verify that the backend server is running, open:
 
@@ -292,6 +289,22 @@ The repository includes supporting documentation covering:
 - Software testing and bug fixes.
 - Deployment and environment setup.
 - Project demonstrations.
+
+Phase 1 documents:
+
+- [SRS and requirements (FR/NFR, examination rules)](docs/requirements/srs-and-work-breakdown.md)
+- [Test planning (functional, security, non-functional and penetration plans)](docs/testing/README.md)
+- [Requirements engineering (problem statement, use cases, RTM, feasibility)](docs/requirements/requirements-engineering-and-rtm.md)
+
+Implementation documents are in `docs/`:
+
+- `docs/architecture/architecture-modules.md`: module layout and rules for adding code.
+- `docs/testing/test-traceability.md`: requirement to test table.
+- `docs/architecture/admin-features.md`: administrator API, settings, permissions and audit log.
+- `docs/project/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
+- `docs/demo/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
+- `docs/project/development-freeze.md`: freeze rules and release checklist.
+- `docs/testing/validation/nfr-acceptance-criteria.md`, `docs/testing/validation/browser-compatibility.md`, `docs/testing/validation/b15-security-validation.md` and the `docs/testing/validation/nfr-*` notes: non-functional evidence.
 
 ---
 
