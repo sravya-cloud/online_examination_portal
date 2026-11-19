@@ -410,7 +410,10 @@ export function createExamRouter({ examRepo, questionRepo }) {
         return res.status(404).json({ error: "Examination not found." });
       }
 
-      const attempts = (await examRepo.listAttemptsByExam(id)) || [];
+      const rawAttempts = (await examRepo.listAttemptsByExam(id)) || [];
+      const attempts = rawAttempts.filter(
+        (a) => a.status === "SUBMITTED" || (a.status !== "IN_PROGRESS" && a.submittedAt)
+      );
       const questions = (await examRepo.getExamQuestions(id)) || [];
 
       const totalAttempts = attempts.length;
@@ -531,9 +534,8 @@ export function createExamRouter({ examRepo, questionRepo }) {
         });
       }
 
-      const startedAt = (req.body?.startedAt && !isNaN(new Date(req.body.startedAt).getTime()))
-        ? new Date(req.body.startedAt)
-        : new Date();
+      // The server sets startedAt itself using the server clock; client-supplied startedAt is ignored
+      const startedAt = new Date();
 
       let attempt;
       if (typeof examRepo.startAttempt === "function") {
@@ -600,14 +602,24 @@ export function createExamRouter({ examRepo, questionRepo }) {
         });
       }
 
-      // 4. A student can only submit once per exam
+      // 4. Submit requires an existing IN_PROGRESS attempt
       const existingAttempt = await examRepo.findAttempt(id, studentId);
-      if (existingAttempt && existingAttempt.status !== "IN_PROGRESS") {
+      if (!existingAttempt) {
+        return res.status(400).json({
+          error: "No active examination attempt found. You must start the examination before submitting.",
+        });
+      }
+      if (existingAttempt.status === "SUBMITTED" || existingAttempt.submittedAt) {
         return res.status(409).json({ error: "You have already submitted an attempt for this examination." });
       }
+      if (existingAttempt.status !== "IN_PROGRESS") {
+        return res.status(400).json({
+          error: "No active examination attempt found. You must start the examination before submitting.",
+        });
+      }
 
-      // 6. Enforce exam duration: reject late submissions if startedAt is recorded
-      if (existingAttempt && existingAttempt.startedAt && exam.durationMinutes) {
+      // 6. Enforce exam duration: reject late submissions
+      if (existingAttempt.startedAt && exam.durationMinutes) {
         const startedAtMs = new Date(existingAttempt.startedAt).getTime();
         const durationMs = exam.durationMinutes * 60 * 1000;
         const graceMs = 30 * 1000; // 30-second network latency grace period

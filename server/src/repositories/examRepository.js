@@ -134,7 +134,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
 
     listAttemptsByExam(examId) {
       return getClient().examAttempt.findMany({
-        where: { examId },
+        where: { examId, status: "SUBMITTED" },
         include: { student: { select: { id: true, name: true, email: true } } },
         orderBy: { submittedAt: "desc" },
       });

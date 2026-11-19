@@ -376,6 +376,13 @@ test("Attempt submission: server compares submitted answers with correct answers
       questionPoolId: "pool-math",
     });
 
+    // Student starts attempt
+    const startRes = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: studentToken,
+    });
+    assert.equal(startRes.status, 201);
+
     // Student attempts to submit with a forged score: 100
     // Correct answers in pool-math: q1: "4", q2: "25", q3: "4"
     // Student provides: q1: "4" (correct), q2: "25" (correct), q3: "999" (wrong)
@@ -474,6 +481,13 @@ test("Attempt submission: a student can only submit once per exam", async () => 
       questionPoolId: "pool-math",
     });
 
+    // Student starts attempt
+    const startRes = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: studentToken,
+    });
+    assert.equal(startRes.status, 201);
+
     // First attempt succeeds
     const firstRes = await request(`/api/exams/${exam.id}/attempts`, {
       method: "POST",
@@ -506,6 +520,13 @@ test("Attempt submission: student id comes only from login token (ignoring body 
       questionCount: 2,
       questionPoolId: "pool-math",
     });
+
+    // Student starts attempt
+    const startRes = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: studentToken,
+    });
+    assert.equal(startRes.status, 201);
 
     // Student tries to spoof studentId: 999 in body
     const res = await request(`/api/exams/${exam.id}/attempts`, {
@@ -580,11 +601,10 @@ test("Attempt duration enforcement: submissions within duration succeed, late su
       durationMinutes: durationMins,
     });
 
-    // 1. On-time student started 5 mins ago
+    // 1. On-time student starts exam now
     const startOnTime = await request(`/api/exams/${exam.id}/start`, {
       method: "POST",
       token: tokenFor("STUDENT", onTimeStudent),
-      body: { startedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
     });
     assert.equal(startOnTime.status, 201);
 
@@ -598,13 +618,12 @@ test("Attempt duration enforcement: submissions within duration succeed, late su
     assert.equal(submitOnTime.body.attempt.status, "SUBMITTED");
 
     // 2. Late student started 35 minutes ago (duration is 30 mins, exceeded past grace period)
-    const thirtyFiveMinsAgo = new Date(Date.now() - 35 * 60 * 1000).toISOString();
-    const startLate = await request(`/api/exams/${exam.id}/start`, {
-      method: "POST",
-      token: tokenFor("STUDENT", lateStudent),
-      body: { startedAt: thirtyFiveMinsAgo },
+    const thirtyFiveMinsAgo = new Date(Date.now() - 35 * 60 * 1000);
+    await repos.examRepo.startAttempt({
+      examId: exam.id,
+      studentId: lateStudent,
+      startedAt: thirtyFiveMinsAgo,
     });
-    assert.equal(startLate.status, 201);
 
     // Attempting late submission
     const submitLate = await request(`/api/exams/${exam.id}/attempts`, {
@@ -614,6 +633,130 @@ test("Attempt duration enforcement: submissions within duration succeed, late su
     });
     assert.equal(submitLate.status, 403);
     assert.ok(submitLate.body.error.includes("Examination duration has expired"));
+  } finally {
+    await close();
+  }
+});
+
+test("Fix 1: /start uses server clock only and ignores client-supplied startedAt", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const studentToken = tokenFor("STUDENT", 810);
+    const exam = await repos.examRepo.createExam({
+      title: "Clock Security Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      durationMinutes: 30,
+    });
+
+    const beforeCall = Date.now();
+    // Student passes a backdated startedAt in the request body
+    const res = await request(`/api/exams/${exam.id}/start`, {
+      method: "POST",
+      token: studentToken,
+      body: { startedAt: "2020-01-01T00:00:00.000Z" },
+    });
+    const afterCall = Date.now();
+
+    assert.equal(res.status, 201);
+    const recordedStart = new Date(res.body.attempt.startedAt).getTime();
+    // Server must use its own clock (between beforeCall and afterCall), not 2020
+    assert.ok(recordedStart >= beforeCall - 1000 && recordedStart <= afterCall + 1000);
+    assert.notEqual(res.body.attempt.startedAt, "2020-01-01T00:00:00.000Z");
+
+    const stored = await repos.examRepo.findAttempt(exam.id, 810);
+    const storedStart = new Date(stored.startedAt).getTime();
+    assert.ok(storedStart >= beforeCall - 1000 && storedStart <= afterCall + 1000);
+  } finally {
+    await close();
+  }
+});
+
+test("Fix 2: Submit requires an existing IN_PROGRESS attempt (skipping /start is rejected)", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const studentToken = tokenFor("STUDENT", 820);
+    const exam = await repos.examRepo.createExam({
+      title: "Start Enforcement Exam",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      durationMinutes: 30,
+    });
+
+    // Student skips /start and directly calls /attempts
+    const res = await request(`/api/exams/${exam.id}/attempts`, {
+      method: "POST",
+      token: studentToken,
+      body: { answers: { q1: "4" } },
+    });
+
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error.includes("No active examination attempt found"));
+
+    // No attempt should have been created
+    const attempt = await repos.examRepo.findAttempt(exam.id, 820);
+    assert.equal(attempt, null);
+  } finally {
+    await close();
+  }
+});
+
+test("Fix 3: GET /:id/report counts only SUBMITTED attempts and ignores IN_PROGRESS attempts", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const teacherToken = tokenFor("TEACHER", 1);
+    const exam = await repos.examRepo.createExam({
+      title: "Reports Filter Exam",
+      questionCount: 3,
+      questionPoolId: "pool-math",
+      durationMinutes: 60,
+    });
+
+    // 1. Student 901 completes and submits attempt with score 3
+    await repos.examRepo.recordAttempt({
+      examId: exam.id,
+      studentId: 901,
+      score: 3,
+      totalMarks: 3,
+      status: "SUBMITTED",
+      submittedAt: new Date(),
+    });
+
+    // 2. Student 902 completes and submits attempt with score 1
+    await repos.examRepo.recordAttempt({
+      examId: exam.id,
+      studentId: 902,
+      score: 1,
+      totalMarks: 3,
+      status: "SUBMITTED",
+      submittedAt: new Date(),
+    });
+
+    // 3. Student 903 is IN_PROGRESS (score 0, not submitted yet)
+    await repos.examRepo.startAttempt({
+      examId: exam.id,
+      studentId: 903,
+      startedAt: new Date(),
+    });
+
+    const res = await request(`/api/exams/${exam.id}/report`, {
+      token: teacherToken,
+    });
+
+    assert.equal(res.status, 200);
+    const report = res.body.report;
+
+    // Report must ONLY count the 2 submitted attempts, ignoring student 903's in-progress attempt
+    assert.equal(report.statistics.totalAttempts, 2);
+    // Average of 3 and 1 is 2.0 (if in-progress score 0 were counted, it would be 4/3 = 1.33)
+    assert.equal(report.statistics.averageScore, 2);
+    assert.equal(report.statistics.highestScore, 3);
+    assert.equal(report.statistics.lowestScore, 1);
+    assert.equal(report.statistics.passCount, 1); // >= 1.5
+    assert.equal(report.statistics.failCount, 1);
+    assert.equal(report.statistics.passRate, 50);
+    assert.equal(report.attempts.length, 2);
+    assert.ok(report.attempts.every((a) => a.studentId !== 903));
   } finally {
     await close();
   }
