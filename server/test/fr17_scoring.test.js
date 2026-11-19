@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createApp } from "../src/app.js";
 import { signToken } from "../src/auth/tokens.js";
-import { scoreObjectiveAnswers } from "../src/services/objectiveScoring.js";
+import { evaluateObjectiveAnswers, scoreObjectiveAnswers } from "../src/services/objectiveScoring.js";
 
 const SECRET = "fr17-scoring-test-secret-at-least-thirty-two-chars";
 const questions = [
@@ -59,6 +59,18 @@ test("FR-17: scoring preserves option-index and case-insensitive answer compatib
   assert.deepEqual(scoreObjectiveAnswers([legacyQuestion], { legacy: "YES" }), { score: 1, totalMarks: 1 });
 });
 
+test("FR-16: evaluates correct, incorrect, and unanswered questions", () => {
+  assert.deepEqual(evaluateObjectiveAnswers(questions, { q1: "A", q2: "D" }), {
+    score: 1,
+    totalMarks: 3,
+    evaluation: {
+      q1: { answer: "A", isCorrect: true },
+      q2: { answer: "D", isCorrect: false },
+      q3: { answer: null, isCorrect: false },
+    },
+  });
+});
+
 test("FR-17: API persists server-calculated score rather than a client-supplied score", async () => {
   const saved = [];
   const examRepo = {
@@ -88,6 +100,11 @@ test("FR-17: API persists server-calculated score rather than a client-supplied 
     assert.equal(saved[0].score, 1);
     assert.equal(saved[0].totalMarks, 3);
     assert.deepEqual(saved[0].answers, { q1: "A", q2: "D" });
+    assert.deepEqual(saved[0].evaluation, {
+      q1: { answer: "A", isCorrect: true },
+      q2: { answer: "D", isCorrect: false },
+      q3: { answer: null, isCorrect: false },
+    });
   } finally {
     await server.close();
   }

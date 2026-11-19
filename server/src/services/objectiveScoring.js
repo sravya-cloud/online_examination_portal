@@ -3,7 +3,7 @@
  * Questions outside the exam's persisted question set are never counted.
  * Unanswered questions count toward totalMarks but not score.
  */
-export function scoreObjectiveAnswers(questions, answers = {}) {
+export function evaluateObjectiveAnswers(questions, answers = {}) {
   if (!Array.isArray(questions)) {
     throw new TypeError("Questions must be an array.");
   }
@@ -12,25 +12,34 @@ export function scoreObjectiveAnswers(questions, answers = {}) {
   }
 
   let score = 0;
+  const evaluation = {};
   for (const question of questions) {
     const selectedAnswer = answers[question.id];
-    if (selectedAnswer === undefined || selectedAnswer === null) continue;
-
     const targetAnswer = question.correctAnswer !== undefined
       ? question.correctAnswer
       : Array.isArray(question.options) && typeof question.correctOption === "number"
         ? question.options[question.correctOption]
         : question.correctOption;
-    if (targetAnswer === undefined || targetAnswer === null) continue;
 
     const normalizedAnswer = typeof selectedAnswer === "number" && Array.isArray(question.options)
       ? question.options[selectedAnswer]
       : selectedAnswer;
-    if (
+    const isCorrect = selectedAnswer !== undefined && selectedAnswer !== null &&
+      targetAnswer !== undefined && targetAnswer !== null &&
       normalizedAnswer !== undefined &&
-      String(normalizedAnswer).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()
-    ) score += 1;
+      String(normalizedAnswer).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase();
+
+    evaluation[question.id] = {
+      answer: selectedAnswer ?? null,
+      isCorrect,
+    };
+    if (isCorrect) score += 1;
   }
 
-  return { score, totalMarks: questions.length };
+  return { score, totalMarks: questions.length, evaluation };
+}
+
+export function scoreObjectiveAnswers(questions, answers = {}) {
+  const { score, totalMarks } = evaluateObjectiveAnswers(questions, answers);
+  return { score, totalMarks };
 }
