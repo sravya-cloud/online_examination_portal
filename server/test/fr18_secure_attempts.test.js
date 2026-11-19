@@ -20,7 +20,7 @@ async function startServer() {
       return id === "exam-1" ? { id, isPublished: true } : null;
     },
     async findAttempt() {
-      return null;
+      return { id: "attempt-in-progress", status: "IN_PROGRESS", startedAt: new Date() };
     },
     async getExamQuestions(id) {
       assert.equal(id, "exam-1");

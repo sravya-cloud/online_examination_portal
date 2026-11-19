@@ -66,7 +66,7 @@ test("FR-17: API persists server-calculated score rather than a client-supplied 
       return examId === "exam-1" ? { id: examId, isPublished: true } : null;
     },
     async findAttempt() {
-      return null;
+      return { id: "attempt-in-progress", status: "IN_PROGRESS", startedAt: new Date() };
     },
     async getExamQuestions(examId) {
       assert.equal(examId, "exam-1");
