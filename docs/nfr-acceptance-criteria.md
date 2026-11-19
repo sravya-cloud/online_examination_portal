@@ -23,4 +23,4 @@ These criteria turn the two unmeasured targets into test conditions the whole te
 - [ ] Sravya
 - [ ] NehaS
 - [ ] NehaJ
-- [ ] Manaswi
+- [ ] Manasvi
