@@ -94,3 +94,27 @@ export async function fetchExamResults(id, token) {
   if (!res.ok) throw new Error(data.error || 'Failed to fetch exam results')
   return data
 }
+
+export async function startExam(id, token) {
+  const res = await fetch(`/api/exams/${id}/start`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Failed to start exam')
+  return data
+}
+
+export async function submitExamAttempt(id, answers, token) {
+  const res = await fetch(`/api/exams/${id}/attempts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ answers }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Failed to submit exam attempt')
+  return data
+}

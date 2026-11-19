@@ -479,21 +479,203 @@ export function createExamRouter({ examRepo, questionRepo }) {
     }
   });
 
-  // Record an attempt
-  router.post("/:id/attempts", async (req, res) => {
+  // Start an exam attempt (records start time to enforce exam duration)
+  router.post("/:id/start", async (req, res) => {
+    // 1. Only students can start examinations
+    if (req.auth?.role !== "STUDENT") {
+      return res.status(403).json({ error: "Only students can start examinations." });
+    }
+
+    // Student id comes only from the login token
+    const studentId = req.auth?.userId;
+    if (!studentId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const { id } = req.params;
-    const studentId = req.auth?.userId || req.body?.studentId;
-    const { score, totalMarks, answers } = req.body ?? {};
+    try {
+      const exam = await examRepo.findExamById(id);
+      if (!exam) {
+        return res.status(404).json({ error: "Examination not found." });
+      }
+
+      // Exam must be published
+      if (!exam.isPublished) {
+        return res.status(403).json({ error: "Examination is not published." });
+      }
+
+      // Exam must be inside its availability window
+      const now = Date.now();
+      if (exam.startTime && now < new Date(exam.startTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination is not yet available.",
+          startTime: exam.startTime,
+        });
+      }
+      if (exam.endTime && now > new Date(exam.endTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination availability period has ended.",
+          endTime: exam.endTime,
+        });
+      }
+
+      // Check for already submitted attempt
+      const existingAttempt = await examRepo.findAttempt(id, studentId);
+      if (existingAttempt) {
+        if (existingAttempt.status !== "IN_PROGRESS") {
+          return res.status(409).json({ error: "You have already submitted an attempt for this examination." });
+        }
+        return res.status(200).json({
+          message: "Examination already started.",
+          attempt: existingAttempt,
+        });
+      }
+
+      const startedAt = (req.body?.startedAt && !isNaN(new Date(req.body.startedAt).getTime()))
+        ? new Date(req.body.startedAt)
+        : new Date();
+
+      let attempt;
+      if (typeof examRepo.startAttempt === "function") {
+        attempt = await examRepo.startAttempt({ examId: id, studentId, startedAt });
+      } else {
+        attempt = await examRepo.recordAttempt({
+          examId: id,
+          studentId,
+          score: 0,
+          totalMarks: 0,
+          status: "IN_PROGRESS",
+          startedAt,
+        });
+      }
+
+      return res.status(201).json({
+        message: "Examination started.",
+        attempt,
+      });
+    } catch (error) {
+      console.error("Start examination failed:", error);
+      return res.status(500).json({ error: "Unable to start examination." });
+    }
+  });
+
+  // Submit an attempt
+  router.post("/:id/attempts", async (req, res) => {
+    // 1. Only students can submit
+    if (req.auth?.role !== "STUDENT") {
+      return res.status(403).json({ error: "Only students can submit examination attempts." });
+    }
+
+    // 5. The student id comes only from the login token
+    const studentId = req.auth?.userId;
+    if (!studentId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { id } = req.params;
+    const { answers } = req.body ?? {};
 
     try {
+      const exam = await examRepo.findExamById(id);
+      if (!exam) {
+        return res.status(404).json({ error: "Examination not found." });
+      }
+
+      // 3. The exam must be published and current time must be inside its availability window
+      if (!exam.isPublished) {
+        return res.status(403).json({ error: "Examination is not published." });
+      }
+
+      const now = Date.now();
+      if (exam.startTime && now < new Date(exam.startTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination is not yet available.",
+          startTime: exam.startTime,
+        });
+      }
+      if (exam.endTime && now > new Date(exam.endTime).getTime()) {
+        return res.status(403).json({
+          error: "Examination availability period has ended.",
+          endTime: exam.endTime,
+        });
+      }
+
+      // 4. A student can only submit once per exam
+      const existingAttempt = await examRepo.findAttempt(id, studentId);
+      if (existingAttempt && existingAttempt.status !== "IN_PROGRESS") {
+        return res.status(409).json({ error: "You have already submitted an attempt for this examination." });
+      }
+
+      // 6. Enforce exam duration: reject late submissions if startedAt is recorded
+      if (existingAttempt && existingAttempt.startedAt && exam.durationMinutes) {
+        const startedAtMs = new Date(existingAttempt.startedAt).getTime();
+        const durationMs = exam.durationMinutes * 60 * 1000;
+        const graceMs = 30 * 1000; // 30-second network latency grace period
+        if (now - startedAtMs > durationMs + graceMs) {
+          return res.status(403).json({
+            error: "Examination duration has expired. Late submissions are not accepted.",
+            durationMinutes: exam.durationMinutes,
+            startedAt: existingAttempt.startedAt,
+          });
+        }
+      }
+
+      // 2. The server compares the submitted answers with the correct answers and works out the score itself
+      const questions = (await examRepo.getExamQuestions(id)) || [];
+      const totalMarks = questions.length;
+      let calculatedScore = 0;
+
+      let answerMap = {};
+      if (answers && typeof answers === "object") {
+        if (Array.isArray(answers)) {
+          answers.forEach((item) => {
+            if (item && item.questionId !== undefined) {
+              answerMap[item.questionId] = item.answer !== undefined ? item.answer : item.selectedAnswer;
+            }
+          });
+        } else {
+          answerMap = { ...answers };
+        }
+      }
+
+      for (const q of questions) {
+        const studentAns = answerMap[q.id];
+        if (studentAns !== undefined && studentAns !== null) {
+          const targetAnswer = q.correctAnswer !== undefined ? q.correctAnswer : (
+            Array.isArray(q.options) && typeof q.correctOption === "number"
+              ? q.options[q.correctOption]
+              : q.correctOption
+          );
+
+          if (targetAnswer !== undefined && targetAnswer !== null) {
+            if (String(studentAns).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()) {
+              calculatedScore += 1;
+            } else if (
+              typeof studentAns === "number" &&
+              Array.isArray(q.options) &&
+              studentAns >= 0 &&
+              studentAns < q.options.length &&
+              String(q.options[studentAns]).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()
+            ) {
+              calculatedScore += 1;
+            }
+          }
+        }
+      }
+
       const attempt = await examRepo.recordAttempt({
         examId: id,
         studentId,
-        score: score ?? 0,
-        totalMarks: totalMarks ?? 0,
-        answers: answers ?? null,
+        score: calculatedScore,
+        totalMarks,
+        answers: answerMap,
+        startedAt: existingAttempt?.startedAt,
       });
-      return res.status(201).json({ message: "Attempt recorded.", attempt });
+
+      return res.status(201).json({
+        message: "Attempt recorded successfully.",
+        attempt,
+      });
     } catch (error) {
       console.error("Record attempt failed:", error);
       return res.status(500).json({ error: "Unable to record attempt." });
