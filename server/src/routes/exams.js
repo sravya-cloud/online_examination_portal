@@ -1,5 +1,6 @@
 import express from "express";
 import { selectRandomQuestions, shuffleQuestionsForAttempt } from "../services/questionSelection.js";
+import { scoreObjectiveAnswers } from "../services/objectiveScoring.js";
 
 export function createExamRouter({ examRepo, questionRepo }) {
   const router = express.Router();
@@ -483,14 +484,16 @@ export function createExamRouter({ examRepo, questionRepo }) {
   router.post("/:id/attempts", async (req, res) => {
     const { id } = req.params;
     const studentId = req.auth?.userId || req.body?.studentId;
-    const { score, totalMarks, answers } = req.body ?? {};
+    const { answers } = req.body ?? {};
 
     try {
+      const questions = await examRepo.getExamQuestions(id);
+      const { score, totalMarks } = scoreObjectiveAnswers(questions, answers ?? {});
       const attempt = await examRepo.recordAttempt({
         examId: id,
         studentId,
-        score: score ?? 0,
-        totalMarks: totalMarks ?? 0,
+        score,
+        totalMarks,
         answers: answers ?? null,
       });
       return res.status(201).json({ message: "Attempt recorded.", attempt });
