@@ -122,19 +122,6 @@ function makeFakeRepositories() {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId && a.status === "IN_PROGRESS") || null;
     },
 
-    async createActiveAttempt(examId, studentId) {
-      const attempt = {
-        id: `active-${attempts.length + 1}`,
-        examId,
-        studentId,
-        status: "IN_PROGRESS",
-        answers: {},
-        startedAt: new Date(),
-      };
-      attempts.push(attempt);
-      return attempt;
-    },
-
     async recordAttempt(data) {
       const attempt = {
         id: `att-${attempts.length + 1}`,
@@ -515,8 +502,10 @@ test("FR-10: Question set is fixed upon publishing and identical for all student
     });
     assert.equal(pubRes.status, 200);
 
-    await request(`/api/exams/${exam.id}/attempts/start`, { method: "POST", token: student1Token });
-    await request(`/api/exams/${exam.id}/attempts/start`, { method: "POST", token: student2Token });
+    const start1 = await request(`/api/exams/${exam.id}/start`, { method: "POST", token: student1Token });
+    const start2 = await request(`/api/exams/${exam.id}/start`, { method: "POST", token: student2Token });
+    assert.equal(start1.status, 201);
+    assert.equal(start2.status, 201);
 
     // Student 1 fetches questions
     const res1 = await request(`/api/exams/${exam.id}/questions`, {
@@ -597,7 +586,15 @@ test("FR-14: Student can resume an active attempt after the availability window 
       endTime: new Date(Date.now() - 10000000).toISOString(),
     });
     await request(`/api/exams/${exam.id}/publish`, { method: "POST", token: teacherToken });
-    await repos.examRepo.createActiveAttempt(exam.id, 101);
+    await repos.examRepo.recordAttempt({
+      examId: exam.id,
+      studentId: 101,
+      status: "IN_PROGRESS",
+      score: 0,
+      totalMarks: 0,
+      answers: {},
+      startedAt: new Date(),
+    });
 
     const response = await request(`/api/exams/${exam.id}/questions`, { token: studentToken });
     assert.equal(response.status, 200);
