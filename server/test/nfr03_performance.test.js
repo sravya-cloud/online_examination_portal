@@ -66,6 +66,11 @@ function makePerformanceMockRepos() {
       const e = exams.find((x) => x.id === id);
       return e ? e.questions.map((eq) => eq.question) : [];
     },
+    async findActiveAttempt(examId, studentId) {
+      return exams.some((exam) => exam.id === examId)
+        ? { id: `active-${examId}-${studentId}`, examId, studentId, status: "IN_PROGRESS", startedAt: new Date() }
+        : null;
+    },
     async findAttempt(examId, studentId) {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
     },

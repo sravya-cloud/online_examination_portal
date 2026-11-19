@@ -47,6 +47,11 @@ function makeSecurityMockRepos() {
       const e = exams.find((x) => x.id === id);
       return e ? e.questions.map((eq) => eq.question) : [];
     },
+    async findActiveAttempt(examId, studentId) {
+      return examId === "exam-sec-1"
+        ? { id: "active-sec-1", examId, studentId, status: "IN_PROGRESS", startedAt: new Date() }
+        : null;
+    },
     async findAttempt() {
       return { id: "att-1", studentId: 101, score: 1, totalMarks: 1, submittedAt: new Date() };
     },

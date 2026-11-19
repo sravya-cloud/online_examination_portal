@@ -4,14 +4,37 @@ import { PORTALS, fetchDashboard } from './auth.js'
 import {
   fetchAvailableExams,
   fetchExamQuestions,
-  autoSubmitExamAttempt,
-  saveExamAnswer,
+  fetchExamResults,
   submitExamAttempt,
-  startExamAttempt,
+  startExam,
 } from './api.js'
 import TeacherExamManagement from './TeacherExamManagement.jsx'
 import TeacherExamReports from './TeacherExamReports.jsx'
-import StudentExamView from './StudentExamView.jsx'
+
+function readSessionAnswers(key) {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(key) || '{}')
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeSessionAnswers(key, answers) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(answers))
+  } catch {
+    // Keep the current in-memory answers if session storage is unavailable.
+  }
+}
+
+function clearSessionAnswers(key) {
+  try {
+    sessionStorage.removeItem(key)
+  } catch {
+    // Submission still succeeds if session storage is unavailable.
+  }
+}
 
 export default function Dashboard({ session, onLogout }) {
   const { user, token } = session
@@ -36,8 +59,23 @@ export default function Dashboard({ session, onLogout }) {
   const [manualSubmitError, setManualSubmitError] = useState('')
   const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(null)
+  const [examResult, setExamResult] = useState(null)
+  const answersRef = useRef({})
+  const submitInFlight = useRef(false)
   const questionRequestId = useRef(0)
-  const autoSubmitRetryTimer = useRef(null)
+
+  function getAnswerStorageKey(examId) {
+    return `exam-answers:${user.id}:${examId}`
+  }
+
+  async function loadExamResult(examId) {
+    try {
+      const result = await fetchExamResults(examId, token)
+      if (selectedExam?.id === examId) setExamResult(result)
+    } catch {
+      setExamResult(null)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -85,23 +123,34 @@ export default function Dashboard({ session, onLogout }) {
     setQuestionStatus('loading')
     setAttemptId(null)
     setAttemptStartedAt(null)
+    answersRef.current = {}
+    setAnswers({})
+    setAnswerStatus('idle')
+    setAnswerError('')
     setAutoSubmitStatus('idle')
     setAutoSubmitError('')
     setManualSubmitStatus('idle')
     setManualSubmitError('')
     setShowSubmitConfirmation(false)
     setTimeRemaining(null)
+    setExamResult(null)
 
     try {
-      const attemptData = await startExamAttempt(exam.id, token)
+      const attemptData = await startExam(exam.id, token)
       if (requestId !== questionRequestId.current) return
       const data = await fetchExamQuestions(exam.id, token)
       if (requestId !== questionRequestId.current) return
 
+      const savedAnswers = readSessionAnswers(getAnswerStorageKey(exam.id))
+      const validQuestionIds = new Set((data.questions || []).map((question) => String(question.id)))
+      const restoredAnswers = Object.fromEntries(
+        Object.entries(savedAnswers).filter(([questionId]) => validQuestionIds.has(questionId)),
+      )
+      answersRef.current = restoredAnswers
       setQuestions(data.questions || [])
       setAttemptId(attemptData.attempt.id)
       setAttemptStartedAt(attemptData.attempt.startedAt)
-      setAnswers(attemptData.attempt.answers || {})
+      setAnswers(restoredAnswers)
       setAnswerStatus('idle')
       setSelectedExam({
         ...exam,
@@ -128,6 +177,7 @@ export default function Dashboard({ session, onLogout }) {
     setCurrentQuestion(0)
     setAttemptId(null)
     setAttemptStartedAt(null)
+    answersRef.current = {}
     setAnswers({})
     setAnswerStatus('idle')
     setAnswerError('')
@@ -137,64 +187,39 @@ export default function Dashboard({ session, onLogout }) {
     setManualSubmitError('')
     setShowSubmitConfirmation(false)
     setTimeRemaining(null)
+    setExamResult(null)
     setQuestionStatus('idle')
     setQuestionError('')
   }
 
   const activeQuestion = questions[currentQuestion]
 
-  async function handleSelectAnswer(questionId, answer) {
-    if (
-      !attemptId || answerStatus === 'saving' || autoSubmitStatus !== 'idle' ||
-      manualSubmitStatus !== 'idle'
-    ) return
+  function handleSelectAnswer(questionId, answer) {
+    if (!attemptId || autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle') return
 
-    const requestId = questionRequestId.current
-    const previousAnswer = answers[questionId]
-    setAnswers((current) => ({ ...current, [questionId]: answer }))
-    setAnswerStatus('saving')
+    const nextAnswers = { ...answersRef.current, [questionId]: answer }
+    answersRef.current = nextAnswers
+    setAnswers(nextAnswers)
+    writeSessionAnswers(getAnswerStorageKey(selectedExam.id), nextAnswers)
+    setAnswerStatus('saved')
     setAnswerError('')
-
-    try {
-      const data = await saveExamAnswer(
-        selectedExam.id,
-        attemptId,
-        questionId,
-        answer,
-        token,
-      )
-      if (requestId !== questionRequestId.current) return
-      setAnswers(data.answers || {})
-      setAnswerStatus('saved')
-    } catch (err) {
-      if (requestId !== questionRequestId.current) return
-      if (err.status === 401) {
-        onLogout()
-        return
-      }
-      setAnswers((current) => {
-        const next = { ...current }
-        if (previousAnswer === undefined) delete next[questionId]
-        else next[questionId] = previousAnswer
-        return next
-      })
-      setAnswerError(err.message || 'Unable to save your answer.')
-      setAnswerStatus('error')
-    }
   }
 
   async function handleManualSubmit() {
     if (
-      !attemptId || answerStatus === 'saving' || autoSubmitStatus !== 'idle' ||
+      !attemptId || submitInFlight.current || autoSubmitStatus !== 'idle' ||
       (manualSubmitStatus !== 'idle' && manualSubmitStatus !== 'error')
     ) return
 
+    submitInFlight.current = true
     setManualSubmitStatus('submitting')
     setManualSubmitError('')
     setShowSubmitConfirmation(false)
     try {
-      await submitExamAttempt(selectedExam.id, attemptId, token)
+      await submitExamAttempt(selectedExam.id, answersRef.current, token)
+      clearSessionAnswers(getAnswerStorageKey(selectedExam.id))
       setManualSubmitStatus('submitted')
+      await loadExamResult(selectedExam.id)
     } catch (err) {
       if (err.status === 401) {
         onLogout()
@@ -202,14 +227,16 @@ export default function Dashboard({ session, onLogout }) {
       }
       setManualSubmitError(err.message || 'Unable to submit your examination.')
       setManualSubmitStatus('error')
+    } finally {
+      submitInFlight.current = false
     }
   }
 
   useEffect(() => {
     if (
       !attemptId || !attemptStartedAt || !selectedExam ||
-      questionStatus !== 'ready' || answerStatus === 'saving' ||
-      autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'
+      questionStatus !== 'ready' || autoSubmitStatus !== 'idle' ||
+      manualSubmitStatus === 'submitting' || manualSubmitStatus === 'submitted'
     ) return undefined
 
     const startedAt = new Date(attemptStartedAt).getTime()
@@ -225,30 +252,26 @@ export default function Dashboard({ session, onLogout }) {
       const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
       setTimeRemaining(remaining)
       if (remaining > 0 || submissionStarted) return
+      if (submitInFlight.current) return
 
       submissionStarted = true
       clearInterval(intervalId)
       setAutoSubmitStatus('submitting')
-      setAutoSubmitError('')
+      submitInFlight.current = true
       try {
-        await autoSubmitExamAttempt(selectedExam.id, attemptId, token)
+        await submitExamAttempt(selectedExam.id, answersRef.current, token)
+        clearSessionAnswers(getAnswerStorageKey(selectedExam.id))
         setAutoSubmitStatus('submitted')
+        await loadExamResult(selectedExam.id)
       } catch (err) {
         if (err.status === 401) {
           onLogout()
           return
         }
-        if (err.status === 409 && err.deadline) {
-          setAutoSubmitStatus('waiting')
-          const retryDelay = Math.max(250, new Date(err.deadline).getTime() - Date.now() + 100)
-          autoSubmitRetryTimer.current = setTimeout(
-            () => setAutoSubmitStatus('idle'),
-            retryDelay,
-          )
-          return
-        }
         setAutoSubmitError(err.message || 'Automatic submission failed.')
         setAutoSubmitStatus('error')
+      } finally {
+        submitInFlight.current = false
       }
     }
 
@@ -266,8 +289,6 @@ export default function Dashboard({ session, onLogout }) {
     selectedExam,
     token,
   ])
-
-  useEffect(() => () => clearTimeout(autoSubmitRetryTimer.current), [])
 
   function formatRemaining(seconds) {
     if (seconds === null) return '--:--'
@@ -407,6 +428,22 @@ export default function Dashboard({ session, onLogout }) {
                     <p role="status">Submitting your saved answers…</p>
                   )}
 
+                  {questionStatus === 'ready' && examResult && (
+                    <section className="exam-result" aria-live="polite">
+                      <h3>Result status</h3>
+                      {examResult.isReleased ? (
+                        <p>
+                          Score: {examResult.score} / {examResult.totalMarks} ({examResult.percentage}%)
+                        </p>
+                      ) : (
+                        <p>
+                          Results are pending release.
+                          {examResult.releaseTime && ` Available after ${formatDate(examResult.releaseTime)}.`}
+                        </p>
+                      )}
+                    </section>
+                  )}
+
                   {questionStatus === 'ready' && manualSubmitStatus === 'error' && (
                     <div>
                       <p className="form-error" role="alert">{manualSubmitError}</p>
@@ -420,14 +457,13 @@ export default function Dashboard({ session, onLogout }) {
                     <p role="status">Time expired. Submitting your saved answers…</p>
                   )}
 
-                  {questionStatus === 'ready' && autoSubmitStatus === 'waiting' && (
-                    <p role="status">Finishing automatic submission…</p>
-                  )}
-
                   {questionStatus === 'ready' && autoSubmitStatus === 'error' && (
                     <div>
                       <p className="form-error" role="alert">{autoSubmitError}</p>
-                      <button type="button" onClick={() => setAutoSubmitStatus('idle')}>
+                      <button type="button" onClick={() => {
+                        setAutoSubmitError('')
+                        setAutoSubmitStatus('idle')
+                      }}>
                         Retry automatic submission
                       </button>
                     </div>
@@ -452,7 +488,7 @@ export default function Dashboard({ session, onLogout }) {
                                 name={`answer-${activeQuestion.id}`}
                                 value={option}
                                 checked={answers[activeQuestion.id] === option}
-                                disabled={answerStatus === 'saving' || autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'}
+                                disabled={autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'}
                                 onChange={() =>
                                   handleSelectAnswer(activeQuestion.id, option)
                                 }
@@ -463,7 +499,6 @@ export default function Dashboard({ session, onLogout }) {
                         </div>
 
                         <p aria-live="polite">
-                          {answerStatus === 'saving' && 'Saving answer…'}
                           {answerStatus === 'saved' && 'Answer saved.'}
                         </p>
                         {answerError && (
@@ -473,7 +508,7 @@ export default function Dashboard({ session, onLogout }) {
                         <div className="question-navigation">
                           <button
                             type="button"
-                            disabled={currentQuestion === 0 || answerStatus === 'saving' || autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'}
+                            disabled={currentQuestion === 0 || autoSubmitStatus !== 'idle' || manualSubmitStatus === 'submitting' || manualSubmitStatus === 'submitted'}
                             onClick={() =>
                               setCurrentQuestion((previous) => previous - 1)
                             }
@@ -483,7 +518,7 @@ export default function Dashboard({ session, onLogout }) {
 
                           <button
                             type="button"
-                            disabled={currentQuestion === questions.length - 1 || answerStatus === 'saving' || autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'}
+                            disabled={currentQuestion === questions.length - 1 || autoSubmitStatus !== 'idle' || manualSubmitStatus === 'submitting' || manualSubmitStatus === 'submitted'}
                             onClick={() =>
                               setCurrentQuestion((previous) => previous + 1)
                             }
@@ -496,7 +531,7 @@ export default function Dashboard({ session, onLogout }) {
                           <button
                             type="button"
                             className="submit-exam-button"
-                            disabled={answerStatus === 'saving' || autoSubmitStatus !== 'idle' || manualSubmitStatus !== 'idle'}
+                            disabled={autoSubmitStatus !== 'idle' || manualSubmitStatus === 'submitting' || manualSubmitStatus === 'submitted'}
                             onClick={() => setShowSubmitConfirmation(true)}
                           >
                             Submit examination
@@ -506,7 +541,7 @@ export default function Dashboard({ session, onLogout }) {
                             <p>You won’t be able to change your answers after submitting.</p>
                             <button
                               type="button"
-                              disabled={answerStatus === 'saving'}
+                              disabled={manualSubmitStatus === 'submitting'}
                               onClick={handleManualSubmit}
                             >
                               Confirm submission
@@ -525,7 +560,7 @@ export default function Dashboard({ session, onLogout }) {
                 </section>
               )}
             </section>
-          {user.role === 'STUDENT' && <StudentExamView token={token} />}
+          )}
         </>
       )}
     </main>

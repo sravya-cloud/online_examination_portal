@@ -67,67 +67,6 @@ export async function fetchExamQuestions(id, token) {
   return data
 }
 
-export async function startExamAttempt(id, token) {
-  const res = await fetch(`/api/exams/${id}/attempts/start`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const error = new Error(data.error || 'Failed to start examination')
-    error.status = res.status
-    throw error
-  }
-  return data
-}
-
-export async function saveExamAnswer(examId, attemptId, questionId, answer, token) {
-  const res = await fetch(`/api/exams/${examId}/attempts/${attemptId}/answers`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ questionId, answer }),
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const error = new Error(data.error || 'Failed to save answer')
-    error.status = res.status
-    throw error
-  }
-  return data
-}
-
-export async function autoSubmitExamAttempt(examId, attemptId, token) {
-  const res = await fetch(`/api/exams/${examId}/attempts/${attemptId}/auto-submit`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const error = new Error(data.error || 'Failed to automatically submit examination')
-    error.status = res.status
-    error.deadline = data.deadline
-    throw error
-  }
-  return data
-}
-
-export async function submitExamAttempt(examId, attemptId, token) {
-  const res = await fetch(`/api/exams/${examId}/attempts/${attemptId}/submit`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const error = new Error(data.error || 'Failed to submit examination')
-    error.status = res.status
-    throw error
-  }
-  return data
-}
-
 export async function updateQuestion(id, questionData, token) {
   const res = await fetch(`/api/questions/${id}`, {
     method: 'PUT',
@@ -176,7 +115,11 @@ export async function startExam(id, token) {
     headers: { Authorization: `Bearer ${token}` },
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Failed to start exam')
+  if (!res.ok) {
+    const error = new Error(data.error || 'Failed to start exam')
+    error.status = res.status
+    throw error
+  }
   return data
 }
 
@@ -190,6 +133,10 @@ export async function submitExamAttempt(id, answers, token) {
     body: JSON.stringify({ answers }),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Failed to submit exam attempt')
+  if (!res.ok) {
+    const error = new Error(data.error || 'Failed to submit exam attempt')
+    error.status = res.status
+    throw error
+  }
   return data
 }
