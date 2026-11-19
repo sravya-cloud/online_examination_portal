@@ -20,6 +20,10 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-11 Shuffle question order | Automated | `server/test/fr11_shuffle.test.js` (VAL-F06: stable per-attempt shuffle, same selected set, and associated question data) | Done |
 | FR-19 Automatic result release at configured time | Automated | `server/test/sprint2_manaswi.test.js` (VAL-F09, VAL-F10; SEC-06: results hidden before release time) | Done |
 | FR-20 View examination reports | Automated | `server/test/sprint2_manaswi.test.js` (VAL-F14: authorized roles only; students blocked with 403) | Done |
+| FR-03 Admin: manage users and roles | Automated | `server/test/admin.test.js` (VAL-F15, VAL-F16, VAL-F18: create, role change, disable, validation, self-protection) | Done |
+| FR-23 Admin: manage system settings | Automated | `server/test/admin.test.js` (VAL-F21: approved settings only, invalid values rejected) | Done |
+| FR-24 Admin: manage role permissions | Automated | `server/test/admin.test.js` (VAL-F22: change takes effect on the next request) | Done |
+| NFR-12 Auditability | Automated | `server/test/admin.test.js` (VAL-N12: admin and exam actions logged with actor) | Done |
 | NFR-01 Authenticated access and roles | Automated | `server/test/auth.test.js` (401, 403, expired and tampered tokens, rate limit) | Done |
 | NFR-03 Performance within 3 seconds | Automated | `server/test/nfr03_performance.test.js` (VAL-N03, `docs/nfr-03-performance.md`) | Done |
 | NFR-07 Modularity | Review + automated | `docs/architecture-modules.md`, tests with fake repository | Done |

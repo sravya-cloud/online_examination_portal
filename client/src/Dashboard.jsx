@@ -10,6 +10,7 @@ import {
 } from './api.js'
 import TeacherExamManagement from './TeacherExamManagement.jsx'
 import TeacherExamReports from './TeacherExamReports.jsx'
+import AdminPanel from './AdminPanel.jsx'
 
 function readSessionAnswers(key) {
   try {
@@ -336,9 +337,21 @@ export default function Dashboard({ session, onLogout }) {
                 >
                   Examination Reports (FR-20)
                 </button>
+                {user.role === 'ADMIN' && (
+                  <button
+                    type="button"
+                    style={{ fontWeight: tab === 'admin' ? 'bold' : 'normal' }}
+                    onClick={() => setTab('admin')}
+                  >
+                    Administration
+                  </button>
+                )}
               </div>
               {tab === 'exams' && <TeacherExamManagement token={token} />}
               {tab === 'reports' && <TeacherExamReports token={token} />}
+              {tab === 'admin' && user.role === 'ADMIN' && (
+                <AdminPanel token={token} currentUserId={user.id} />
+              )}
             </div>
           )}
 
