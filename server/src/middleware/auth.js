@@ -27,3 +27,15 @@ export function requireRole(...roles) {
     return next();
   };
 }
+
+// FR-24: allow a request only when the user's role holds the permission.
+export function requirePermission(permissions, permission) {
+  return async (req, res, next) => {
+    try {
+      if (req.auth && (await permissions.has(req.auth.role, permission))) return next();
+      return res.status(403).json({ error: "You do not have access to this resource" });
+    } catch (err) {
+      return next(err);
+    }
+  };
+}

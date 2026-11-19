@@ -2,22 +2,33 @@ import express from "express";
 import cors from "cors";
 import { assertSecret } from "./auth/tokens.js";
 import { createLoginLimiter } from "./auth/rateLimiter.js";
-import { authenticate, requireRole } from "./middleware/auth.js";
+import { authenticate, requireRole, requirePermission } from "./middleware/auth.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { createExamRouter } from "./routes/exams.js";
 import { createQuestionRouter } from "./routes/questions.js";
 import { createStudentExamRouter } from "./routes/studentExams.js";
+import { createAdminRouter } from "./routes/admin.js";
+import { createAuditLogger } from "./services/audit.js";
+import { createSettingsService } from "./services/settings.js";
+import { createPermissionService } from "./services/permissions.js";
 
 export function createApp({
   userRepo,
   examRepo,
   questionRepo,
+  auditRepo,
+  settingsRepo,
+  permissionRepo,
   jwtSecret,
   jwtExpiresIn = "1h",
   limiter = createLoginLimiter(),
   corsOrigin,
 }) {
   assertSecret(jwtSecret);
+
+  const audit = createAuditLogger({ auditRepo });
+  const settings = createSettingsService({ settingsRepo });
+  const permissions = createPermissionService({ permissionRepo });
 
   const app = express();
   app.use(cors(corsOrigin ? { origin: corsOrigin } : undefined));
@@ -50,7 +61,7 @@ export function createApp({
     app.use(
       "/api/exams",
       authenticate({ secret: jwtSecret }),
-      createExamRouter({ examRepo, questionRepo })
+      createExamRouter({ examRepo, questionRepo, audit, permissions })
     );
   }
 
@@ -58,10 +69,18 @@ export function createApp({
     app.use(
       "/api/questions",
       authenticate({ secret: jwtSecret }),
-      requireRole("TEACHER"),
+      requirePermission(permissions, "question.manage"),
       createQuestionRouter({ questionRepo, examRepo })
     );
   }
+
+  // FR-03, FR-23, FR-24, NFR-12: administrator features.
+  app.use(
+    "/api/admin",
+    authenticate({ secret: jwtSecret }),
+    requireRole("ADMIN"),
+    createAdminRouter({ userRepo, settings, permissions, audit })
+  );
 
   // Role-protected landing endpoints (NFR-01). Later sprints replace these
   // stubs with the real student, teacher and admin features.
