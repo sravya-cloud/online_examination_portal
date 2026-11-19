@@ -39,8 +39,35 @@ test("NFR-10: System handles concurrent users without workflow interruption (VAL
     async findAttempt(examId, studentId) {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
     },
-    async recordAttempt({ examId, studentId, score, totalMarks }) {
-      const att = { id: `att-${attempts.length + 1}`, examId, studentId, score, totalMarks, submittedAt: new Date() };
+    async startAttempt({ examId, studentId, startedAt = new Date() }) {
+      const existing = attempts.find((a) => a.examId === examId && a.studentId === studentId);
+      if (existing) return existing;
+      const att = { id: `att-${attempts.length + 1}`, examId, studentId, status: "IN_PROGRESS", startedAt };
+      attempts.push(att);
+      return att;
+    },
+    async recordAttempt({ examId, studentId, score, totalMarks, answers }) {
+      const existing = attempts.find(
+        (a) => a.examId === examId && a.studentId === studentId && a.status === "IN_PROGRESS"
+      );
+      if (existing) {
+        existing.status = "SUBMITTED";
+        existing.score = score;
+        existing.totalMarks = totalMarks;
+        existing.answers = answers;
+        existing.submittedAt = new Date();
+        return existing;
+      }
+      const att = {
+        id: `att-${attempts.length + 1}`,
+        examId,
+        studentId,
+        status: "SUBMITTED",
+        score,
+        totalMarks,
+        answers,
+        submittedAt: new Date(),
+      };
       attempts.push(att);
       return att;
     },
@@ -73,10 +100,17 @@ test("NFR-10: System handles concurrent users without workflow interruption (VAL
 
     await Promise.all(fetchPromises);
 
-    // Concurrently submit attempts for 50 distinct students
+    // Concurrently start and submit attempts for 50 distinct students
     const submitPromises = Array.from({ length: CONCURRENT_USERS }, async (_, i) => {
       const studentId = 1000 + i;
       const token = tokenFor("STUDENT", studentId);
+
+      const startRes = await fetch(`${baseUrl}/api/exams/${exam.id}/start`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      assert.equal(startRes.status, 201);
+
       const res = await fetch(`${baseUrl}/api/exams/${exam.id}/attempts`, {
         method: "POST",
         headers: {
