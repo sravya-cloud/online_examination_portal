@@ -1,5 +1,6 @@
 import express from "express";
 import { selectRandomQuestions, shuffleQuestionsForAttempt } from "../services/questionSelection.js";
+import { scoreObjectiveAnswers } from "../services/objectiveScoring.js";
 
 export function createExamRouter({ examRepo, questionRepo }) {
   const router = express.Router();
@@ -583,7 +584,11 @@ export function createExamRouter({ examRepo, questionRepo }) {
     }
 
     const { id } = req.params;
-    const { answers } = req.body ?? {};
+    const { answers = {} } = req.body ?? {};
+
+    if (answers === null || typeof answers !== "object" || Array.isArray(answers)) {
+      return res.status(400).json({ error: "Answers must be an object keyed by question ID." });
+    }
 
     try {
       const exam = await examRepo.findExamById(id);
@@ -640,55 +645,23 @@ export function createExamRouter({ examRepo, questionRepo }) {
         }
       }
 
-      // 2. The server compares the submitted answers with the correct answers and works out the score itself
+      // Score only answers for questions in this exam's fixed question set.
       const questions = (await examRepo.getExamQuestions(id)) || [];
-      const totalMarks = questions.length;
-      let calculatedScore = 0;
-
-      let answerMap = {};
-      if (answers && typeof answers === "object") {
-        if (Array.isArray(answers)) {
-          answers.forEach((item) => {
-            if (item && item.questionId !== undefined) {
-              answerMap[item.questionId] = item.answer !== undefined ? item.answer : item.selectedAnswer;
-            }
-          });
-        } else {
-          answerMap = { ...answers };
+      const selectedQuestionIds = new Set(questions.map((question) => question.id));
+      for (const [questionId, answer] of Object.entries(answers)) {
+        if (!selectedQuestionIds.has(questionId) || !["string", "number"].includes(typeof answer)) {
+          return res.status(400).json({ error: "Answers must reference selected exam questions and contain a choice." });
         }
       }
 
-      for (const q of questions) {
-        const studentAns = answerMap[q.id];
-        if (studentAns !== undefined && studentAns !== null) {
-          const targetAnswer = q.correctAnswer !== undefined ? q.correctAnswer : (
-            Array.isArray(q.options) && typeof q.correctOption === "number"
-              ? q.options[q.correctOption]
-              : q.correctOption
-          );
-
-          if (targetAnswer !== undefined && targetAnswer !== null) {
-            if (String(studentAns).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()) {
-              calculatedScore += 1;
-            } else if (
-              typeof studentAns === "number" &&
-              Array.isArray(q.options) &&
-              studentAns >= 0 &&
-              studentAns < q.options.length &&
-              String(q.options[studentAns]).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()
-            ) {
-              calculatedScore += 1;
-            }
-          }
-        }
-      }
+      const { score, totalMarks } = scoreObjectiveAnswers(questions, answers);
 
       const attempt = await examRepo.recordAttempt({
         examId: id,
         studentId,
-        score: calculatedScore,
+        score,
         totalMarks,
-        answers: answerMap,
+        answers,
         startedAt: existingAttempt?.startedAt,
       });
 
