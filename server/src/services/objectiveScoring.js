@@ -13,9 +13,23 @@ export function scoreObjectiveAnswers(questions, answers = {}) {
 
   let score = 0;
   for (const question of questions) {
-    if (answers[question.id] !== undefined && answers[question.id] === question.correctAnswer) {
-      score += 1;
-    }
+    const selectedAnswer = answers[question.id];
+    if (selectedAnswer === undefined || selectedAnswer === null) continue;
+
+    const targetAnswer = question.correctAnswer !== undefined
+      ? question.correctAnswer
+      : Array.isArray(question.options) && typeof question.correctOption === "number"
+        ? question.options[question.correctOption]
+        : question.correctOption;
+    if (targetAnswer === undefined || targetAnswer === null) continue;
+
+    const normalizedAnswer = typeof selectedAnswer === "number" && Array.isArray(question.options)
+      ? question.options[selectedAnswer]
+      : selectedAnswer;
+    if (
+      normalizedAnswer !== undefined &&
+      String(normalizedAnswer).trim().toLowerCase() === String(targetAnswer).trim().toLowerCase()
+    ) score += 1;
   }
 
   return { score, totalMarks: questions.length };

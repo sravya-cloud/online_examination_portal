@@ -53,9 +53,21 @@ test("FR-17: invalid question or answer containers are rejected", () => {
   assert.throws(() => scoreObjectiveAnswers(questions, []), /Answers must be an object/);
 });
 
+test("FR-17: scoring preserves option-index and case-insensitive answer compatibility", () => {
+  const legacyQuestion = { id: "legacy", options: ["Yes", "No"], correctOption: 0 };
+  assert.deepEqual(scoreObjectiveAnswers([legacyQuestion], { legacy: 0 }), { score: 1, totalMarks: 1 });
+  assert.deepEqual(scoreObjectiveAnswers([legacyQuestion], { legacy: "YES" }), { score: 1, totalMarks: 1 });
+});
+
 test("FR-17: API persists server-calculated score rather than a client-supplied score", async () => {
   const saved = [];
   const examRepo = {
+    async findExamById(examId) {
+      return examId === "exam-1" ? { id: examId, isPublished: true } : null;
+    },
+    async findAttempt() {
+      return null;
+    },
     async getExamQuestions(examId) {
       assert.equal(examId, "exam-1");
       return questions;

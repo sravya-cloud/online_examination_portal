@@ -19,6 +19,9 @@ async function startServer() {
     async findExamById(id) {
       return id === "exam-1" ? { id, isPublished: true } : null;
     },
+    async findAttempt() {
+      return null;
+    },
     async getExamQuestions(id) {
       assert.equal(id, "exam-1");
       return questions;
@@ -83,14 +86,18 @@ test("FR-18: unauthenticated requests and non-student roles cannot store attempt
   }
 });
 
-test("FR-18: malformed or out-of-exam answers are rejected without persistence", async () => {
+test("FR-18: malformed or unselected-question answers are rejected; wrong choices score zero", async () => {
   const server = await startServer();
   try {
     const token = tokenFor("STUDENT", 17);
     assert.equal((await server.record(token, { answers: ["A"] })).status, 400);
-    assert.equal((await server.record(token, { answers: { q1: "not-an-option" } })).status, 400);
     assert.equal((await server.record(token, { answers: { unselected: "A" } })).status, 400);
     assert.equal(server.saved.length, 0);
+
+    const wrongChoice = await server.record(token, { answers: { q1: "not-an-option" } });
+    assert.equal(wrongChoice.status, 201);
+    assert.equal(server.saved[0].score, 0);
+    assert.equal(server.saved[0].totalMarks, questions.length);
   } finally {
     await server.close();
   }
