@@ -73,27 +73,21 @@ The following examination rules are defined in the Phase 1 requirements:
 ## ⚙️ Main Features
 
 ### Student Module
-- User authentication.
-- View available examinations.
-- Start examinations.
-- Answer examination questions.
-- Submit examinations.
-- View examination results.
-- Receive relevant notifications.
+- Log in through the student portal (FR-01).
+- See the examinations that are currently available (FR-21).
+- Start an exam, answer questions in a per-attempt shuffled order, and submit manually or automatically when time ends (FR-11 to FR-15).
+- Answers are scored on the server; results appear only after the configured release time (FR-16 to FR-19).
 
 ### Teacher Module
-- Create examinations.
-- Update examination details.
-- Manage the question bank.
-- Add, update, and remove questions.
-- Configure examination settings.
-- View examination reports.
+- Add questions to a question pool with a difficulty level, and edit or remove them until the exam is published (FR-05 to FR-07).
+- Create exams with duration, availability window and result release time, then publish them to fix the question set (FR-04, FR-08 to FR-10).
+- View examination reports (FR-20).
 
 ### Administrator Module
-- Manage users.
-- Manage roles and permissions.
-- Manage system settings.
-- Control administrative access.
+- Create users, change roles, and disable or enable accounts (FR-03).
+- Change approved system settings (FR-23).
+- Change what each role is allowed to do (FR-24).
+- Review the audit log of administrator and exam actions (NFR-12).
 
 ### Security
 - Authentication and authorization.
@@ -232,7 +226,21 @@ The backend will run at:
 
 `http://localhost:5000`
 
-### 3. Backend Health Check
+### 3. Database, demo accounts and tests
+
+In `server/`, copy `.env.example` to `.env` and fill in `DATABASE_URL`, `JWT_SECRET` (32+ characters) and `SEED_PASSWORD` (8+ characters). Each team member uses their own database and `.env`; never commit it or share the connection string.
+
+```bash
+cd server
+npx prisma generate
+npx prisma migrate deploy
+npm run seed
+npm test
+```
+
+`npm run seed` creates `student@example.com`, `teacher@example.com` and `admin@example.com`, all with the seed password. Log in through the portal that matches the role.
+
+### 4. Backend Health Check
 
 To verify that the backend server is running, open:
 
@@ -292,6 +300,16 @@ The repository includes supporting documentation covering:
 - Software testing and bug fixes.
 - Deployment and environment setup.
 - Project demonstrations.
+
+Implementation documents are in `docs/`:
+
+- `docs/architecture-modules.md`: module layout and rules for adding code.
+- `docs/test-traceability.md`: requirement to test table.
+- `docs/admin-features.md`: administrator API, settings, permissions and audit log.
+- `docs/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
+- `docs/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
+- `docs/development-freeze.md`: freeze rules and release checklist.
+- `docs/nfr-acceptance-criteria.md`, `docs/browser-compatibility.md`, `docs/b15-security-validation.md` and the `nfr-*` notes: non-functional evidence.
 
 ---
 
