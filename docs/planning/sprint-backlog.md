@@ -12,7 +12,7 @@ These dates and estimates are proposed for team review, not confirmed commitment
 
 ## Backlog
 
-Story points are estimates for discussion. Assign owners after the team confirms availability.
+Story points remain estimates for discussion; backlog owners are recorded in `Product_Backlog.md` from the current GitHub issue assignments.
 
 | ID | Work item | Requirements | Points | Sprint |
 |---|---|---|---:|---|
@@ -33,7 +33,7 @@ Story points are estimates for discussion. Assign owners after the team confirms
 | B-15 | Validate authentication, authorization, input handling, and exam access | Security requirements | 5 | Sprint 2 |
 | B-16 | Run regression tests and close traceability gaps | RTM and test plan | 3 | Sprint 2 |
 | B-17 | Update documentation, prepare demos, and freeze development | Delivery | 2 | Both |
-| B-18 | Agree acceptance criteria for unresolved NFR targets | NFR-03, NFR-06 | 2 | Planning / Sprint 1 |
+| B-18 | Record agreed NFR-03/NFR-06 acceptance criteria and reconcile validation IDs | NFR-03, NFR-06 | 2 | Planning / Sprint 1 |
 
 ## Definition of done
 
@@ -44,6 +44,6 @@ Story points are estimates for discussion. Assign owners after the team confirms
 - Documentation is updated alongside behavior changes.
 - Demo evidence is ready for the sprint checkpoint.
 
-## Team setup still required
+## Team setup status
 
-Create or update the GitHub Project, add backlog items as issues, set estimates and sprint fields, and assign owners after the team confirms capacity. This document proposes the backlog; it does not mean the project items already exist.
+The GitHub Project exists and the requirement backlog is represented by GitHub issues with assignees and workflow status. The project board also tracks linked pull requests. Keep the board and this document synchronized as assignments or scope change. The board's Estimate field is only partially populated (the Done group currently reports 27 points), so do not treat that aggregate as the complete 109-point backlog estimate; verify and fill estimates and sprint/iteration fields before the final evidence capture.

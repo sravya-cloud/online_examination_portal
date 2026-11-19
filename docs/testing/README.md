@@ -1,6 +1,6 @@
 # 2. Test Planning
 
-Phase 1 validation plans for the Online Examination Portal (Team E6), prepared by Nehaa Joshi. The test plan document is [`Test_Plan.pdf`](Test_Plan.pdf). Requirement mapping is in the [RTM](../requirements/requirements-engineering-and-rtm.md#7-requirements-traceability-matrix-rtm).
+Phase 1 validation plans for the Online Examination Portal (Team E6), prepared by Nehaa Joshi. The final submission copy is [`Test_Plan.pdf`](../../output/pdf/Test_Plan.pdf); the originally submitted baseline is retained as [`Test_Plan.pdf`](Test_Plan.pdf). Requirement mapping is in the [RTM](../requirements/requirements-engineering-and-rtm.md#7-requirements-traceability-matrix-rtm).
 
 ## Requirement Testability Criteria
 
@@ -51,13 +51,18 @@ VAL-F19 (Send Notification) is dropped: notifications are out of scope for Phase
 
 | ID | Quality attribute | Validation plan |
 |---|---|---|
-| VAL-N01 | Performance | Measure response time for login, exam loading, question navigation and submission (target: 3 s under normal load, NFR-03). |
-| VAL-N02 | Load | Many students attempting the same examination simultaneously. |
-| VAL-N03 | Reliability | Answers and submissions are preserved during normal failures. |
-| VAL-N04 | Usability | Representative users complete common tasks; difficulties recorded (includes NFR-06 five-minute target, pending approval). |
-| VAL-N05 | Availability | Portal remains accessible during the scheduled exam period. |
-| VAL-N06 | Scalability | Behavior as the number of users and questions grows. |
-| VAL-N07 | Compatibility | Commonly used browsers and screen sizes. |
+| VAL-N01 | Security and authorization (NFR-01) | Verify authentication, role restrictions, session handling, and protected operations; supplement with VAL-S and VAL-P checks. |
+| VAL-N02 | Reliability (NFR-02) | Verify submitted answers and attempt data persist through normal operation and database-client reconnection. |
+| VAL-N03 | Performance (NFR-03) | Measure common actions five times in the signed local one-user baseline; average and slowest response must be <= 3 seconds. |
+| VAL-N04 | Availability (NFR-04) | Probe health and active-exam questions throughout the simulated exam window; document that this is a CI simulation, not production uptime. |
+| VAL-N05 | Usability (NFR-05) | Observe whether main actions have clear navigation, instructions, and feedback; record notes. |
+| VAL-N06 | Learnability (NFR-06) | Run the signed five-question task with at least two first-time participants; each should submit unaided within five minutes. |
+| VAL-N07 | Maintainability (NFR-07) | Review module boundaries, documented interfaces, and independent testing/change isolation. |
+| VAL-N08 | Compatibility (NFR-08) | Run core workflows on supported current major desktop browsers. |
+| VAL-N09 | Testability (NFR-09) | Audit requirement-to-test traceability and observable pass conditions. |
+| VAL-N10 | Scalability (NFR-10) | Run concurrent-user checks and observe workflow stability and data integrity. |
+| VAL-N11 | Data integrity (NFR-11) | Compare relational records through critical exam operations and check for orphaned/inconsistent data. |
+| VAL-N12 | Auditability (NFR-12) | Verify important admin and exam actions create usable audit records without secrets or answer content. |
 
 ## Penetration Testing Plan
 

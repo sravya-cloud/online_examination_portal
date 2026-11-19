@@ -41,7 +41,7 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-21 Display available examinations | Automated | `server/test/studentExams.test.js` (VAL-F11) | Done |
 | NFR-04 Availability during exam window | Automated | `server/test/nfr04_availability.test.js` (`docs/testing/validation/nfr-04-availability.md`) | Done |
 | NFR-05 Usability | Manual | Demo walkthrough: each major action shows a clear message | Planned (manual run before demo) |
-| NFR-06 Learnability (5 minutes) | Manual | Timed trial with a new user, conditions in `docs/testing/validation/nfr-acceptance-criteria.md` | Planned (manual run before demo) |
+| NFR-06 Learnability (5 minutes) | Manual | Timed trial with two first-time participants, conditions in `docs/testing/validation/nfr-acceptance-criteria.md` | Planned (team-approved criteria; manual run before demo) |
 | NFR-11 Data integrity | PostgreSQL integration | `server/test/nfr11_integrity.integration.test.js` (runs in CI, `docs/testing/validation/nfr-11-data-integrity.md`) | Done |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
