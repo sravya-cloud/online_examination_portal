@@ -53,8 +53,7 @@ The system consists of five main actors:
 - Authenticate users.
 - Support secure login and access control.
 
-### 5. Notification Service
-- Handle system notifications related to examination activities.
+Notifications are outside the Phase 1 scope.
 
 ---
 
@@ -133,6 +132,7 @@ online_examination_portal/
 │   ├── testing/                # Test plan, traceability, validation
 │   ├── project/                # Deviations and freeze checklist
 │   └── demo/                   # Demo script
+├── output/pdf/                 # Final submission PDF copies; original PDFs remain in docs/
 ├── .gitignore
 └── README.md
 ```

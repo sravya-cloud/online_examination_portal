@@ -1,7 +1,7 @@
 # 1. SRS and Work Breakdown
 
 Phase 1 requirements baseline for the Online Examination Portal (Team E6).
-Requirement IDs and wording were finalized by Manasvi D R. The full SRS is in [`SRS.pdf`](SRS.pdf); the source handoff is [`Manasvi_Requirements_and_RTM.docx`](Manasvi_Requirements_and_RTM.docx).
+Requirement IDs and wording were finalized by Manasvi D R. The final submission copy is [`SRS.pdf`](../../output/pdf/SRS.pdf); the originally submitted baseline is retained as [`SRS.pdf`](SRS.pdf). The source handoff is [`Manasvi_Requirements_and_RTM.docx`](Manasvi_Requirements_and_RTM.docx).
 
 Related: [Requirements Engineering](requirements-engineering-and-rtm.md) · [Test Planning](../testing/README.md) · [Sprint plan](../planning/sprint-backlog.md)
 
@@ -53,10 +53,10 @@ Related: [Requirements Engineering](requirements-engineering-and-rtm.md) · [Tes
 |----|----------|-------------|--------|
 | NFR-01 | Security | The system shall require authenticated access for protected functions and enforce role-based authorization for Student, Teacher, and Administrator actions. | Proposed team NFR |
 | NFR-02 | Reliability | The system shall preserve submitted examination answers and attempt data without loss during normal operation. | Proposed team NFR |
-| NFR-03 | Performance | The system shall respond to common user actions within 3 seconds under normal load. | Proposed measurable target; "normal load" to be defined |
+| NFR-03 | Performance | The system shall respond to common user actions within 3 seconds under the Phase 1 normal-load baseline. | **Assumption:** for this academic project, normal load means one active user on the local server/database with seeded demo data. This matches the team-signed B-18 procedure; it is a baseline, not a production capacity claim. Concurrent-user capacity is evaluated separately under NFR-10. Validation: VAL-N03. |
 | NFR-04 | Availability | The system shall remain available to authorized users throughout a configured examination availability period, except during planned maintenance. | Proposed team NFR |
 | NFR-05 | Usability | The system shall provide clear navigation, readable instructions, and understandable feedback for major user actions. | Proposed team NFR |
-| NFR-06 | Learnability | A first-time student shall be able to start and submit an examination within 5 minutes without assistance. | Proposed measurable target; **team approval required** |
+| NFR-06 | Learnability | A first-time student shall be able to start and submit an examination within 5 minutes without assistance. | Team-signed B-18 criteria specify two first-time participants and a five-question exam. The target is approved; the participant trials remain pending. Validation: VAL-N06. |
 | NFR-07 | Maintainability | The system shall use modular components and documented interfaces so individual modules can be modified or tested with minimal impact on unrelated modules. | Proposed team NFR |
 | NFR-08 | Compatibility | The web portal shall support the current major version of commonly used desktop web browsers used by target users. | Proposed team NFR |
 | NFR-09 | Testability | Each functional and non-functional requirement shall have an associated validation or test method with observable acceptance criteria. | Proposed team NFR |

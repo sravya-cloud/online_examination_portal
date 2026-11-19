@@ -41,7 +41,7 @@ Record observer, date, browser, and any confusing wording or dead ends here:
 
 ## NFR-06: first-time student completes within five minutes (VAL-N06)
 
-The target and method below follow `docs/testing/validation/nfr-acceptance-criteria.md`. The 5-minute target is provisional pending team approval, as noted in `docs/planning/manasvi-contribution-handoff.md`.
+The target and method below follow the team-signed `docs/testing/validation/nfr-acceptance-criteria.md`. The five-minute target is approved; the validation run remains pending until both participant results are recorded.
 
 Use two participants who have never used the portal. Prepare a five-question exam and create their accounts in advance. Give no training or help. Start a stopwatch when each participant begins logging in; stop when they submit. Note hesitation or confusion without coaching.
 
@@ -50,4 +50,4 @@ Use two participants who have never used the portal. Prepare a five-question exa
 | P1 | Pending | Pending | Pending | Pending |
 | P2 | Pending | Pending | Pending | Pending |
 
-Do not fill in participant results without running the trial. NFR-06 remains unverified until both rows have observed results and the team approves the provisional target.
+Do not fill in participant results without running the trial. NFR-06 remains unverified until both rows have observed results.
