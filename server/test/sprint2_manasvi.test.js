@@ -220,6 +220,7 @@ test("FR-19: Student results are HIDDEN before scheduled release time (VAL-F09, 
     assert.equal(res.status, 200);
     assert.equal(res.body.isReleased, false);
     assert.equal(res.body.score, undefined); // Does NOT leak score!
+    assert.equal(res.body.evaluation, undefined); // Per-question correctness is also hidden.
     assert.ok(res.body.message.includes("Results are not yet released"));
     assert.equal(new Date(res.body.releaseTime).toISOString(), exam.resultReleaseTime.toISOString());
   } finally {
@@ -246,6 +247,11 @@ test("FR-19: Student results are VISIBLE once scheduled release time arrives (VA
       studentId: 502,
       score: 2,
       totalMarks: 3,
+      evaluation: {
+        q1: { answer: "A", isCorrect: true },
+        q2: { answer: "B", isCorrect: true },
+        q3: { answer: "C", isCorrect: false },
+      },
     });
 
     // Student requests result
@@ -255,6 +261,11 @@ test("FR-19: Student results are VISIBLE once scheduled release time arrives (VA
     assert.equal(res.body.score, 2);
     assert.equal(res.body.totalMarks, 3);
     assert.equal(res.body.percentage, 67);
+    assert.deepEqual(res.body.evaluation, {
+      q1: { answer: "A", isCorrect: true },
+      q2: { answer: "B", isCorrect: true },
+      q3: { answer: "C", isCorrect: false },
+    });
   } finally {
     await close();
   }
