@@ -1,8 +1,8 @@
 # Requirement to Test Traceability (NFR-09)
 
-Every requirement has a test method and an observable pass condition (VAL-N09). Update the Status column as each feature is merged.
+This matrix lists automated/manual coverage and evidence locations. Results from the targeted unit run and the post-merge full server run are recorded in [`unit-test-report.md`](unit-test-report.md) and [`system-test-report.md`](system-test-report.md). A test's presence does not establish a pass; use those reports for the latest recorded execution results.
 
-Status key: Done = automated or manual test exists and passes. Planned = test case written, feature not finished.
+Status key: Done = test coverage or evidence is documented. Planned = validation remains pending. Consult the linked reports for actual run outcomes.
 
 | Requirement | Test method | Test location | Status |
 |---|---|---|---|
