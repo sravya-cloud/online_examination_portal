@@ -54,6 +54,52 @@ body {
   margin: 0;
 }
 
+.question-options {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.question-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.question-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.question-option input {
+  margin-top: 5px;
+  accent-color: var(--accent);
+}
+
+.question-option span {
+  flex: 1;
+}
+
+.submit-exam-button {
+  margin-top: 18px;
+}
+
+.submit-confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.submit-confirmation p {
+  flex-basis: 100%;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;

@@ -118,6 +118,10 @@ function makeFakeRepositories() {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
     },
 
+    async findActiveAttempt(examId, studentId) {
+      return attempts.find((a) => a.examId === examId && a.studentId === studentId && a.status === "IN_PROGRESS") || null;
+    },
+
     async recordAttempt(data) {
       const attempt = {
         id: `att-${attempts.length + 1}`,
@@ -498,6 +502,11 @@ test("FR-10: Question set is fixed upon publishing and identical for all student
     });
     assert.equal(pubRes.status, 200);
 
+    const start1 = await request(`/api/exams/${exam.id}/start`, { method: "POST", token: student1Token });
+    const start2 = await request(`/api/exams/${exam.id}/start`, { method: "POST", token: student2Token });
+    assert.equal(start1.status, 201);
+    assert.equal(start2.status, 201);
+
     // Student 1 fetches questions
     const res1 = await request(`/api/exams/${exam.id}/questions`, {
       token: student1Token,
@@ -559,6 +568,37 @@ test("FR-10: Student access denied outside availability period", async () => {
     const pastRes = await request(`/api/exams/${pastExam.id}/questions`, { token: studentToken });
     assert.equal(pastRes.status, 403);
     assert.equal(pastRes.body.error, "Examination availability window has ended.");
+  } finally {
+    await close();
+  }
+});
+
+test("FR-14: Student can resume an active attempt after the availability window ends", async () => {
+  const { request, close, repos } = await createTestServer();
+  try {
+    const teacherToken = tokenFor("TEACHER");
+    const studentToken = tokenFor("STUDENT", 101);
+    const exam = await repos.examRepo.createExam({
+      title: "Resume expired-window attempt",
+      questionCount: 2,
+      questionPoolId: "pool-math",
+      startTime: new Date(Date.now() - 20000000).toISOString(),
+      endTime: new Date(Date.now() - 10000000).toISOString(),
+    });
+    await request(`/api/exams/${exam.id}/publish`, { method: "POST", token: teacherToken });
+    await repos.examRepo.recordAttempt({
+      examId: exam.id,
+      studentId: 101,
+      status: "IN_PROGRESS",
+      score: 0,
+      totalMarks: 0,
+      answers: {},
+      startedAt: new Date(),
+    });
+
+    const response = await request(`/api/exams/${exam.id}/questions`, { token: studentToken });
+    assert.equal(response.status, 200);
+    assert.equal(response.body.questions.length, 2);
   } finally {
     await close();
   }

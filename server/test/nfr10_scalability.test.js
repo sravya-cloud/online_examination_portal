@@ -31,6 +31,11 @@ test("NFR-10: System handles concurrent users without workflow interruption (VAL
     async getExamQuestions(id) {
       return id === exam.id ? questions : [];
     },
+    async findActiveAttempt(examId, studentId) {
+      return examId === exam.id
+        ? { id: `active-${studentId}`, examId, studentId, status: "IN_PROGRESS", startedAt: new Date() }
+        : null;
+    },
     async findAttempt(examId, studentId) {
       return attempts.find((a) => a.examId === examId && a.studentId === studentId) || null;
     },

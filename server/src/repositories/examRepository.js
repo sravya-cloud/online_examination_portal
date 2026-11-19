@@ -51,6 +51,37 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
+    listAvailableExams(now = new Date()) {
+      return getClient().exam.findMany({
+        where: {
+          isPublished: true,
+          AND: [
+            {
+              OR: [
+                { startTime: null },
+                { startTime: { lte: now } },
+              ],
+            },
+            {
+              OR: [
+                { endTime: null },
+                { endTime: { gte: now } },
+              ],
+            },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          questionCount: true,
+          durationMinutes: true,
+          startTime: true,
+          endTime: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    },
+
     updateExam(id, data) {
       const updateData = { ...data };
       if (updateData.startTime !== undefined) {
@@ -148,12 +179,14 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
 
     startAttempt({ examId, studentId, startedAt = new Date() }) {
       return getClient().examAttempt.create({
-        data: {
-          examId,
-          studentId,
-          status: "IN_PROGRESS",
-          startedAt,
-        },
+        data: { examId, studentId, status: "IN_PROGRESS", startedAt },
+      });
+    },
+
+    findActiveAttempt(examId, studentId) {
+      return getClient().examAttempt.findFirst({
+        where: { examId, studentId, status: "IN_PROGRESS" },
+        orderBy: { startedAt: "desc" },
       });
     },
 
@@ -192,5 +225,6 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
         },
       });
     },
+
   };
 }

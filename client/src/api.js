@@ -1,3 +1,13 @@
+export async function fetchAvailableExams(token) {
+  const res = await fetch('/api/student/exams', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Failed to load available exams')
+  return data
+}
+
 export async function fetchExams(token) {
   const res = await fetch('/api/exams', {
     headers: { Authorization: `Bearer ${token}` },
@@ -49,7 +59,11 @@ export async function fetchExamQuestions(id, token) {
     headers: { Authorization: `Bearer ${token}` },
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Failed to fetch questions')
+  if (!res.ok) {
+    const error = new Error(data.error || 'Failed to fetch questions')
+    error.status = res.status
+    throw error
+  }
   return data
 }
 
@@ -101,7 +115,11 @@ export async function startExam(id, token) {
     headers: { Authorization: `Bearer ${token}` },
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Failed to start exam')
+  if (!res.ok) {
+    const error = new Error(data.error || 'Failed to start exam')
+    error.status = res.status
+    throw error
+  }
   return data
 }
 
@@ -115,6 +133,10 @@ export async function submitExamAttempt(id, answers, token) {
     body: JSON.stringify({ answers }),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Failed to submit exam attempt')
+  if (!res.ok) {
+    const error = new Error(data.error || 'Failed to submit exam attempt')
+    error.status = res.status
+    throw error
+  }
   return data
 }

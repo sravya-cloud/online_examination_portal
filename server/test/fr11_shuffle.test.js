@@ -34,6 +34,15 @@ function createExamRepo() {
     async getExamQuestions() {
       return selectedQuestions;
     },
+    async findActiveAttempt(examId, studentId) {
+      return {
+        id: `active-${examId}-${studentId}`,
+        examId,
+        studentId,
+        status: "IN_PROGRESS",
+        startedAt: new Date(),
+      };
+    },
     async countAttemptsByStudent(examId, studentId) {
       return completedAttempts.get(`${examId}:${studentId}`) ?? 0;
     },

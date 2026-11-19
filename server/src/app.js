@@ -6,6 +6,7 @@ import { authenticate, requireRole } from "./middleware/auth.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { createExamRouter } from "./routes/exams.js";
 import { createQuestionRouter } from "./routes/questions.js";
+import { createStudentExamRouter } from "./routes/studentExams.js";
 
 export function createApp({
   userRepo,
@@ -35,6 +36,15 @@ export function createApp({
       limiter,
     })
   );
+
+  if (examRepo) {
+    app.use(
+      "/api/student/exams",
+      authenticate({ secret: jwtSecret }),
+      requireRole("STUDENT"),
+      createStudentExamRouter({ examRepo })
+    );
+  }
 
   if (examRepo) {
     app.use(

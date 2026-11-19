@@ -146,6 +146,10 @@ export function createExamRouter({ examRepo, questionRepo }) {
 
   // Get specific examination
   router.get("/:id", async (req, res) => {
+    if (req.auth?.role !== "TEACHER" && req.auth?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Only teachers and administrators can view examination details." });
+    }
+
     const { id } = req.params;
     try {
       const exam = await examRepo.findExamById(id);
@@ -298,18 +302,22 @@ export function createExamRouter({ examRepo, questionRepo }) {
       }
 
       if (isStudent) {
-        const now = Date.now();
-        if (exam.startTime && now < new Date(exam.startTime).getTime()) {
-          return res.status(403).json({
-            error: "Examination is not yet available.",
-            startTime: exam.startTime,
-          });
-        }
-        if (exam.endTime && now > new Date(exam.endTime).getTime()) {
-          return res.status(403).json({
-            error: "Examination availability window has ended.",
-            endTime: exam.endTime,
-          });
+        const attempt = await examRepo.findActiveAttempt(id, req.auth.userId);
+        if (!attempt) {
+          const now = Date.now();
+          if (exam.startTime && now < new Date(exam.startTime).getTime()) {
+            return res.status(403).json({
+              error: "Examination is not yet available.",
+              startTime: exam.startTime,
+            });
+          }
+          if (exam.endTime && now > new Date(exam.endTime).getTime()) {
+            return res.status(403).json({
+              error: "Examination availability window has ended.",
+              endTime: exam.endTime,
+            });
+          }
+          return res.status(403).json({ error: "Start an examination attempt before viewing its questions." });
         }
       }
 

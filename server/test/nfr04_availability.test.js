@@ -28,6 +28,9 @@ test("NFR-04: health and active exam questions stay available throughout the sim
     async getExamQuestions() {
       return [{ id: "question-1", text: "Availability check", options: ["A", "B"] }];
     },
+    async findActiveAttempt(examId, studentId) {
+      return { id: `active-${examId}-${studentId}`, examId, studentId, status: "IN_PROGRESS", startedAt: new Date() };
+    },
   };
   const app = createApp({ userRepo: {}, examRepo, jwtSecret: SECRET });
   const server = await new Promise((resolve) => {
