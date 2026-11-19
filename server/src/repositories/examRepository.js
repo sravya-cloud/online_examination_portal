@@ -196,7 +196,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
       });
     },
 
-    async recordAttempt({ examId, studentId, score, totalMarks, answers = null, startedAt = null }) {
+    async recordAttempt({ examId, studentId, score, totalMarks, answers = null, evaluation = null, startedAt = null }) {
       const existing = await getClient().examAttempt.findFirst({
         where: { examId, studentId, status: "IN_PROGRESS" },
       });
@@ -208,6 +208,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
             score,
             totalMarks,
             answers,
+            evaluation,
             submittedAt: new Date(),
           },
         });
@@ -220,6 +221,7 @@ export function createPrismaExamRepository({ getClient = getPrisma } = {}) {
           score,
           totalMarks,
           answers,
+          evaluation,
           startedAt: startedAt || new Date(),
           submittedAt: new Date(),
         },

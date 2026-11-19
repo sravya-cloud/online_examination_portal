@@ -432,9 +432,25 @@ export default function Dashboard({ session, onLogout }) {
                     <section className="exam-result" aria-live="polite">
                       <h3>Result status</h3>
                       {examResult.isReleased ? (
-                        <p>
-                          Score: {examResult.score} / {examResult.totalMarks} ({examResult.percentage}%)
-                        </p>
+                        <>
+                          <p>
+                            Score: {examResult.score} / {examResult.totalMarks} ({examResult.percentage}%)
+                          </p>
+                          {examResult.evaluation && (
+                            <div>
+                              <h4>Answer evaluation</h4>
+                              <ol>
+                                {questions.map((question, index) => {
+                                  const evaluation = examResult.evaluation[question.id]
+                                  const answerStatus = !evaluation || evaluation.answer === null
+                                    ? 'Unanswered'
+                                    : evaluation.isCorrect ? 'Correct' : 'Incorrect'
+                                  return <li key={question.id}>Question {index + 1}: {answerStatus}</li>
+                                })}
+                              </ol>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <p>
                           Results are pending release.

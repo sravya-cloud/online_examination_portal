@@ -1,6 +1,6 @@
 import express from "express";
 import { selectRandomQuestions, shuffleQuestionsForAttempt } from "../services/questionSelection.js";
-import { scoreObjectiveAnswers } from "../services/objectiveScoring.js";
+import { evaluateObjectiveAnswers } from "../services/objectiveScoring.js";
 
 export function createExamRouter({ examRepo, questionRepo }) {
   const router = express.Router();
@@ -395,6 +395,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
         score: attempt ? attempt.score : null,
         totalMarks: attempt ? attempt.totalMarks : null,
         percentage: attempt && attempt.totalMarks > 0 ? Math.round((attempt.score / attempt.totalMarks) * 100) : 0,
+        evaluation: attempt?.evaluation || null,
         submittedAt: attempt ? attempt.submittedAt : null,
         status: attempt ? attempt.status : "NO_ATTEMPT",
       });
@@ -654,7 +655,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
         }
       }
 
-      const { score, totalMarks } = scoreObjectiveAnswers(questions, answers);
+      const { score, totalMarks, evaluation } = evaluateObjectiveAnswers(questions, answers);
 
       const attempt = await examRepo.recordAttempt({
         examId: id,
@@ -662,6 +663,7 @@ export function createExamRouter({ examRepo, questionRepo }) {
         score,
         totalMarks,
         answers,
+        evaluation,
         startedAt: existingAttempt?.startedAt,
       });
 
