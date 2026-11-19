@@ -13,13 +13,13 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` | Done |
 | FR-06 Assign difficulty level to questions | Automated | `server/test/questions.test.js` | Done |
 | NFR-02 Reliability: no loss of submitted data | PostgreSQL integration | `server/test/nfr02_reliability.test.js` (attempt and answer JSON persist after disconnecting and reconnecting a Prisma client) | Done |
-| FR-07 Edit or remove questions before publishing | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F13: editable before publish, blocked after publish) | Done |
-| FR-08 Configure exam duration and availability period | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F04: duration, start/end times persisted and validated) | Done |
-| FR-09 Random selection of questions from pool | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F05: uniform selection of N questions) | Done |
-| FR-10 Same question set for all students | Automated | `server/test/sprint1_manaswi.test.js` (VAL-F05: question set fixed across student attempts) | Done |
+| FR-07 Edit or remove questions before publishing | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F13: editable before publish, blocked after publish) | Done |
+| FR-08 Configure exam duration and availability period | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F04: duration, start/end times persisted and validated) | Done |
+| FR-09 Random selection of questions from pool | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F05: uniform selection of N questions) | Done |
+| FR-10 Same question set for all students | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F05: question set fixed across student attempts) | Done |
 | FR-11 Shuffle question order | Automated | `server/test/fr11_shuffle.test.js` (VAL-F06: stable per-attempt shuffle, same selected set, and associated question data) | Done |
-| FR-19 Automatic result release at configured time | Automated | `server/test/sprint2_manaswi.test.js` (VAL-F09, VAL-F10; SEC-06: results hidden before release time) | Done |
-| FR-20 View examination reports | Automated | `server/test/sprint2_manaswi.test.js` (VAL-F14: authorized roles only; students blocked with 403) | Done |
+| FR-19 Automatic result release at configured time | Automated | `server/test/sprint2_manasvi.test.js` (VAL-F09, VAL-F10; SEC-06: results hidden before release time) | Done |
+| FR-20 View examination reports | Automated | `server/test/sprint2_manasvi.test.js` (VAL-F14: authorized roles only; students blocked with 403) | Done |
 | FR-03 Admin: manage users and roles | Automated | `server/test/admin.test.js` (VAL-F15, VAL-F16, VAL-F18: create, role change, disable, validation, self-protection) | Done |
 | FR-23 Admin: manage system settings | Automated | `server/test/admin.test.js` (VAL-F21: approved settings only, invalid values rejected) | Done |
 | FR-24 Admin: manage role permissions | Automated | `server/test/admin.test.js` (VAL-F22: change takes effect on the next request) | Done |
@@ -31,9 +31,8 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | NFR-09 Testability | Review | This table | Done |
 | NFR-10 Scalability | Automated | `server/test/nfr10_scalability.test.js` (VAL-N10, `docs/nfr-10-scalability.md`) | Done |
 | B-15 Security validation | Automated | `server/test/b15_security.test.js` (`docs/b15-security-validation.md`) | Done |
-| FR-03, FR-23, FR-24 | | | Planned |
 | Other FRs (FR-12 to FR-18, FR-21) | | | Planned |
-| Other NFRs (NFR-04 to NFR-06, NFR-11, NFR-12) | | | Planned |
+| Other NFRs (NFR-04 to NFR-06, NFR-11) | | | Planned |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
 
