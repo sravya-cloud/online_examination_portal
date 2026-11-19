@@ -1,9 +1,9 @@
 # 1. SRS and Work Breakdown
 
 Phase 1 requirements baseline for the Online Examination Portal (Team E6).
-Requirement IDs and wording were finalized by Manasvi D R. The full SRS is in [`SRS.pdf`](../SRS.pdf); the source handoff is [`Manasvi_Requirements_and_RTM.docx`](Manasvi_Requirements_and_RTM.docx).
+Requirement IDs and wording were finalized by Manasvi D R. The full SRS is in [`SRS.pdf`](SRS.pdf); the source handoff is [`Manasvi_Requirements_and_RTM.docx`](Manasvi_Requirements_and_RTM.docx).
 
-Related: [Requirements Engineering](../3-Requirements-Engineering/README.md) · [Test Planning](../2-Test-Planning/README.md) · [Sprint plan](../docs/sprint-backlog.md)
+Related: [Requirements Engineering](requirements-engineering-and-rtm.md) · [Test Planning](../testing/README.md) · [Sprint plan](../planning/sprint-backlog.md)
 
 ## Finalized Examination Rules
 
@@ -68,4 +68,4 @@ Related: [Requirements Engineering](../3-Requirements-Engineering/README.md) · 
 
 Clear · Unambiguous · Concise · Consistent · Measurable/verifiable · Feasible · Traceable · Atomic
 
-The requirement-to-use-case-to-validation mapping is in the [RTM](../3-Requirements-Engineering/README.md#requirements-traceability-matrix-rtm).
+The requirement-to-use-case-to-validation mapping is in the [RTM](requirements-engineering-and-rtm.md#requirements-traceability-matrix-rtm).

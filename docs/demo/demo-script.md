@@ -25,7 +25,7 @@ Goal: show evaluation, results, reports, admin features and quality evidence.
 | 0:40 to 1:15 | Admin: create a user, change a role, disable a user | User and role management (FR-03) |
 | 1:15 to 1:35 | Admin: change a setting and a role permission, then show the teacher losing or gaining access | Settings and permissions take effect immediately (FR-23, FR-24) |
 | 1:35 to 1:50 | Admin: audit log | Every admin and exam action is recorded with who did it (NFR-12) |
-| 1:50 to 2:00 | GitHub Actions run and `docs/deviations-note.md` | CI runs tests on every pull request; deviations are documented |
+| 1:50 to 2:00 | GitHub Actions run and `docs/project/deviations-note.md` | CI runs tests on every pull request; deviations are documented |
 
 ## Before recording
 

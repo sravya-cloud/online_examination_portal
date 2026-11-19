@@ -3,7 +3,7 @@
 Phase 1 analysis for the Online Examination Portal (Team E6).
 Contributors: Sravya (problem statement, scope, feasibility), Neha Sachin (actors, use cases), Nehaa Joshi (validation), Manasvi D R (requirement IDs and wording).
 
-Related: [SRS and requirements](../1-SRS-and-Work-Breakdown/README.md) · [Test Planning](../2-Test-Planning/README.md) · [Use-case diagram](../UseCase_Architecture.pdf) · [UML](../ExamPortal_UML.drawio.pdf)
+Related: [SRS and requirements](srs-and-work-breakdown.md) · [Test Planning](../testing/README.md) · [Architecture and design](../architecture/Software_Architecture_and_Design.pdf) · [UML](../architecture/ExamPortal_UML.drawio.pdf)
 
 ## 1. Problem Statement
 
@@ -98,7 +98,7 @@ The student project team is treated as the development team, not a system stakeh
 
 ## 7. Requirements Traceability Matrix (RTM)
 
-FR = Functional Requirement, UC = Use Case, VAL = Validation ID (see [Test Planning](../2-Test-Planning/README.md)).
+FR = Functional Requirement, UC = Use Case, VAL = Validation ID (see [Test Planning](../testing/README.md)).
 
 | Req. ID | Requirement | Use case | Validation |
 |---|---|---|---|
