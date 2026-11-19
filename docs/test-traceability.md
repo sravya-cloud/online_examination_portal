@@ -10,7 +10,7 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-02 Teacher login | Automated | `server/test/auth.test.js` | Done |
 | FR-22 Administrator login | Automated | `server/test/auth.test.js` | Done |
 | FR-04 Create examinations | Automated | `server/test/exams.test.js` | Done |
-| FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` | Done |
+| FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` (questions and question pools; Question Bank tab for teachers) | Done |
 | FR-06 Assign difficulty level to questions | Automated | `server/test/questions.test.js` | Done |
 | NFR-02 Reliability: no loss of submitted data | PostgreSQL integration | `server/test/nfr02_reliability.test.js` (attempt and answer JSON persist after disconnecting and reconnecting a Prisma client) | Done |
 | FR-07 Edit or remove questions before publishing | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F13: editable before publish, blocked after publish) | Done |

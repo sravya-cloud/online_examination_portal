@@ -6,6 +6,23 @@ export function createPrismaQuestionRepository({ getClient = getPrisma } = {}) {
       return getClient().questionPool.findUnique({ where: { id } });
     },
 
+    // FR-05: question pools that questions are uploaded into.
+    findQuestionPoolByName(name) {
+      return getClient().questionPool.findUnique({ where: { name } });
+    },
+
+    createQuestionPool({ name }) {
+      return getClient().questionPool.create({ data: { name } });
+    },
+
+    async listQuestionPools() {
+      const pools = await getClient().questionPool.findMany({
+        orderBy: { createdAt: "asc" },
+        include: { _count: { select: { questions: true } } },
+      });
+      return pools.map(({ _count, ...pool }) => ({ ...pool, questionCount: _count.questions }));
+    },
+
     createQuestion({ text, options, correctAnswer, questionPoolId, difficulty }) {
       return getClient().question.create({
         data: { text, options, correctAnswer, questionPoolId, difficulty },

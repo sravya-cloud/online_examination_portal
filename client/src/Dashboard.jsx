@@ -11,6 +11,7 @@ import {
 import TeacherExamManagement from './TeacherExamManagement.jsx'
 import TeacherExamReports from './TeacherExamReports.jsx'
 import AdminPanel from './AdminPanel.jsx'
+import QuestionBank from './QuestionBank.jsx'
 
 function readSessionAnswers(key) {
   try {
@@ -330,6 +331,15 @@ export default function Dashboard({ session, onLogout }) {
                 >
                   Manage Exams & Questions
                 </button>
+                {user.role === 'TEACHER' && (
+                  <button
+                    type="button"
+                    style={{ fontWeight: tab === 'bank' ? 'bold' : 'normal' }}
+                    onClick={() => setTab('bank')}
+                  >
+                    Question Bank (FR-05)
+                  </button>
+                )}
                 <button
                   type="button"
                   style={{ fontWeight: tab === 'reports' ? 'bold' : 'normal' }}
@@ -348,6 +358,7 @@ export default function Dashboard({ session, onLogout }) {
                 )}
               </div>
               {tab === 'exams' && <TeacherExamManagement token={token} />}
+              {tab === 'bank' && user.role === 'TEACHER' && <QuestionBank token={token} />}
               {tab === 'reports' && <TeacherExamReports token={token} />}
               {tab === 'admin' && user.role === 'ADMIN' && (
                 <AdminPanel token={token} currentUserId={user.id} />

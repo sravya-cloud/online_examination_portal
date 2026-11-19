@@ -136,3 +136,40 @@ test("Prisma question repository uses injected client and lists by pool", async 
   assert.deepEqual(calls.map(([name]) => name), ["pool", "create", "list"]);
   assert.deepEqual(calls[2][1], { where: { questionPoolId: "pool-1" }, include: { questionPool: true }, orderBy: { createdAt: "asc" } });
 });
+
+test("FR-05: teacher creates and lists question pools; duplicates and bad names are rejected", async () => {
+  const pools = [];
+  const repo = {
+    async findQuestionPoolByName(name) { return pools.find((p) => p.name === name) ?? null; },
+    async createQuestionPool({ name }) {
+      const pool = { id: `pool-${pools.length + 1}`, name };
+      pools.push(pool);
+      return pool;
+    },
+    async listQuestionPools() { return pools.map((p) => ({ ...p, questionCount: 0 })); },
+  };
+  const app = createApp({ userRepo: {}, examRepo: {}, questionRepo: repo, jwtSecret: SECRET });
+  const server = await new Promise((resolve) => { const l = app.listen(0, () => resolve(l)); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const call = async (method, path, who, body) => {
+    const headers = { "Content-Type": "application/json" };
+    if (who) headers.Authorization = `Bearer ${who}`;
+    const res = await fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    return { status: res.status, body: await res.json() };
+  };
+  try {
+    const created = await call("POST", "/api/questions/pools", token(), { name: "  Databases  " });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.pool.name, "Databases");
+    assert.equal((await call("POST", "/api/questions/pools", token(), { name: "Databases" })).status, 409);
+    assert.equal((await call("POST", "/api/questions/pools", token(), { name: "   " })).status, 400);
+    assert.equal((await call("POST", "/api/questions/pools", token(), {})).status, 400);
+    const list = await call("GET", "/api/questions/pools", token());
+    assert.equal(list.status, 200);
+    assert.deepEqual(list.body.pools.map((p) => p.name), ["Databases"]);
+    assert.equal((await call("GET", "/api/questions/pools")).status, 401);
+    assert.equal((await call("POST", "/api/questions/pools", token("STUDENT"), { name: "X" })).status, 403);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});

@@ -9,7 +9,8 @@ export default function TeacherExamManagement({ token }) {
 
   // Exam Form
   const [title, setTitle] = useState('')
-  const [poolId, setPoolId] = useState('pool-1')
+  const [poolId, setPoolId] = useState('')
+  const [pools, setPools] = useState([])
   const [questionCount, setQuestionCount] = useState(5)
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [startTime, setStartTime] = useState('')
@@ -45,6 +46,21 @@ export default function TeacherExamManagement({ token }) {
         setError(err.message)
         setLoading(false)
       })
+    return () => {
+      active = false
+    }
+  }, [token])
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/questions/pools', { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active || !data.pools) return
+        setPools(data.pools)
+        setPoolId((current) => current || data.pools[0]?.id || '')
+      })
+      .catch(() => {})
     return () => {
       active = false
     }
@@ -147,8 +163,15 @@ export default function TeacherExamManagement({ token }) {
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </label>
             <label>
-              Question Pool ID:
-              <input type="text" value={poolId} onChange={(e) => setPoolId(e.target.value)} required />
+              Question Pool:
+              <select value={poolId} onChange={(e) => setPoolId(e.target.value)} required>
+                {pools.length === 0 && <option value="">Create a pool in the Question Bank tab first</option>}
+                {pools.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.questionCount} questions)
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Number of Questions (FR-09):
