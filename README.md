@@ -301,6 +301,12 @@ The repository includes supporting documentation covering:
 - Deployment and environment setup.
 - Project demonstrations.
 
+Phase 1 documents:
+
+- [SRS and requirements (FR/NFR, examination rules)](1-SRS-and-Work-Breakdown/README.md)
+- [Test planning (functional, security, non-functional and penetration plans)](2-Test-Planning/README.md)
+- [Requirements engineering (problem statement, use cases, RTM, feasibility)](3-Requirements-Engineering/README.md)
+
 Implementation documents are in `docs/`:
 
 - `docs/architecture-modules.md`: module layout and rules for adding code.

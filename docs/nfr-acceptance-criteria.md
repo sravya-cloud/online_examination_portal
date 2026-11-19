@@ -20,7 +20,7 @@ These criteria turn the two unmeasured targets into test conditions the whole te
 - **Record:** time taken, points of confusion.
 
 ## Sign-off
-- [ ] Sravya
-- [ ] NehaS
-- [ ] NehaJ
-- [ ] Manasvi
+- [x] Sravya
+- [x] NehaS
+- [x] NehaJ
+- [x] Manasvi
