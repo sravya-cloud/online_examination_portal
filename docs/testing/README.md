@@ -1,6 +1,6 @@
 # 2. Test Planning
 
-Phase 1 validation plans for the Online Examination Portal (Team E6), prepared by Nehaa Joshi. The test plan document is [`Test_Plan.pdf`](Test_Plan.pdf). Requirement mapping is in the [RTM](../3-Requirements-Engineering/README.md#7-requirements-traceability-matrix-rtm).
+Phase 1 validation plans for the Online Examination Portal (Team E6), prepared by Nehaa Joshi. The test plan document is [`Test_Plan.pdf`](Test_Plan.pdf). Requirement mapping is in the [RTM](../requirements/requirements-engineering-and-rtm.md#7-requirements-traceability-matrix-rtm).
 
 ## Requirement Testability Criteria
 

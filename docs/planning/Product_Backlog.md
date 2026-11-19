@@ -1,6 +1,6 @@
 # Product Backlog: Online Examination Portal (Team E6)
 
-Source: `SRS.pdf` v1.0 (FR-01 to FR-24, NFR-01 to NFR-12). Security requirements SEC-01 to SEC-10 are covered inside NFR-01, FR-18, FR-19 and NFR-12.
+Source: `../requirements/SRS.pdf` v1.0 (FR-01 to FR-24, NFR-01 to NFR-12). Security requirements SEC-01 to SEC-10 are covered inside NFR-01, FR-18, FR-19 and NFR-12.
 
 Replace *Member 1 to 4* with real team members' names before assigning. Story points use a Fibonacci-style scale (1, 2, 3, 5) and are estimates the team can adjust until 19 Oct.
 

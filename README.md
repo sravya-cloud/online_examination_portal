@@ -117,38 +117,27 @@ The selected technologies for the project are:
 
 ## 📁 Project Structure
 
-The repository is organized as follows:
-
 ```text
 online_examination_portal/
-│
-├── 1-SRS-and-Work-Breakdown/
-├── 2-Test-Planning/
-├── 3-Requirements-Engineering/
-├── 4-Design-and-Architecture/
-├── 5-GitHub-and-Jira-Evidence/
-├── 6-GitHub-Copilot/
-├── 7-Software-Testing-and-Bug-Fixes/
-├── 8-Deployment-and-Environment/
-├── 9-Demo/
-│
-├── client/                  # React frontend
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── server/                  # Express backend
-│   ├── src/
-│   │   └── index.js
-│   ├── prisma/
-│   │   └── schema.prisma
-│   ├── prisma.config.ts
-│   └── package.json
-│
-├── docs/                    # Additional project documents
+├── .github/workflows/          # CI on pushes and pull requests
+├── client/                     # React + Vite frontend
+│   └── src/
+├── server/                     # Express API and Prisma/PostgreSQL
+│   ├── prisma/                 # Schema, migrations, and seed
+│   ├── src/                    # Routes, repositories, services, auth
+│   └── test/                   # Backend automated tests
+├── docs/
+│   ├── requirements/           # SRS, requirements, and RTM
+│   ├── planning/               # Product and sprint backlogs
+│   ├── architecture/           # SAD, diagrams, and module guide
+│   ├── testing/                # Test plan, traceability, validation
+│   ├── project/                # Deviations and freeze checklist
+│   └── demo/                   # Demo script
 ├── .gitignore
 └── README.md
 ```
+
+Submission evidence and deployment materials should be added alongside their actual deliverables; empty placeholder files are not used.
 
 ---
 
@@ -303,19 +292,19 @@ The repository includes supporting documentation covering:
 
 Phase 1 documents:
 
-- [SRS and requirements (FR/NFR, examination rules)](1-SRS-and-Work-Breakdown/README.md)
-- [Test planning (functional, security, non-functional and penetration plans)](2-Test-Planning/README.md)
-- [Requirements engineering (problem statement, use cases, RTM, feasibility)](3-Requirements-Engineering/README.md)
+- [SRS and requirements (FR/NFR, examination rules)](docs/requirements/srs-and-work-breakdown.md)
+- [Test planning (functional, security, non-functional and penetration plans)](docs/testing/README.md)
+- [Requirements engineering (problem statement, use cases, RTM, feasibility)](docs/requirements/requirements-engineering-and-rtm.md)
 
 Implementation documents are in `docs/`:
 
-- `docs/architecture-modules.md`: module layout and rules for adding code.
-- `docs/test-traceability.md`: requirement to test table.
-- `docs/admin-features.md`: administrator API, settings, permissions and audit log.
-- `docs/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
-- `docs/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
-- `docs/development-freeze.md`: freeze rules and release checklist.
-- `docs/nfr-acceptance-criteria.md`, `docs/browser-compatibility.md`, `docs/b15-security-validation.md` and the `nfr-*` notes: non-functional evidence.
+- `docs/architecture/architecture-modules.md`: module layout and rules for adding code.
+- `docs/testing/test-traceability.md`: requirement to test table.
+- `docs/architecture/admin-features.md`: administrator API, settings, permissions and audit log.
+- `docs/project/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
+- `docs/demo/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
+- `docs/project/development-freeze.md`: freeze rules and release checklist.
+- `docs/testing/validation/nfr-acceptance-criteria.md`, `docs/testing/validation/browser-compatibility.md`, `docs/testing/validation/b15-security-validation.md` and the `docs/testing/validation/nfr-*` notes: non-functional evidence.
 
 ---
 

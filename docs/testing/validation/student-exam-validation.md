@@ -41,7 +41,7 @@ Record observer, date, browser, and any confusing wording or dead ends here:
 
 ## NFR-06: first-time student completes within five minutes (VAL-N06)
 
-The target and method below follow `docs/nfr-acceptance-criteria.md`. The 5-minute target is provisional pending team approval, as noted in `docs/manasvi-contribution-handoff.md`.
+The target and method below follow `docs/testing/validation/nfr-acceptance-criteria.md`. The 5-minute target is provisional pending team approval, as noted in `docs/planning/manasvi-contribution-handoff.md`.
 
 Use two participants who have never used the portal. Prepare a five-question exam and create their accounts in advance. Give no training or help. Start a stopwatch when each participant begins logging in; stop when they submit. Note hesitation or confusion without coaching.
 
