@@ -301,8 +301,11 @@ The repository includes supporting documentation covering:
 - Deployment and environment setup.
 - Project demonstrations.
 
-Implementation documents are in `docs/`:
+Implementation documents are in `docs/` and the Phase 2 deliverable folders:
 
+- `4-Design-and-Architecture/README.md` (and `docs/software-architecture-document.md`): Software Architecture Document (SAD v2.0), system architecture diagram, sequence flows, attempt state machine, and data architecture.
+- `7-Software-Testing-and-Bug-Fixes/README.md` (and `docs/code-coverage-report.md`): Code and branch coverage report (80.62% line, 76.44% branch, 81.45% function coverage).
+- `8-Deployment-and-Environment/README.md` (and `docs/deployment-guide.md`): Deployment and environment setup instructions without real credentials.
 - `docs/architecture-modules.md`: module layout and rules for adding code.
 - `docs/test-traceability.md`: requirement to test table.
 - `docs/admin-features.md`: administrator API, settings, permissions and audit log.
