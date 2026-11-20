@@ -296,8 +296,11 @@ Phase 1 documents:
 - [Test planning (functional, security, non-functional and penetration plans)](docs/testing/README.md)
 - [Requirements engineering (problem statement, use cases, RTM, feasibility)](docs/requirements/requirements-engineering-and-rtm.md)
 
-Implementation documents are in `docs/`:
+Phase 2 deliverables & implementation documents are in `docs/`:
 
+- `docs/architecture/software-architecture-document.md`: Software Architecture Document (SAD v2.0), system architecture diagram, sequence flows, attempt state machine, and data architecture.
+- `docs/testing/code-coverage-report.md`: Code and branch coverage report (80.62% line, 76.44% branch, 81.45% function coverage).
+- `docs/deployment/README.md` (and `docs/deployment/deployment-guide.md`): Deployment and environment setup instructions without real credentials.
 - `docs/architecture/architecture-modules.md`: module layout and rules for adding code.
 - `docs/testing/test-traceability.md`: requirement to test table.
 - `docs/architecture/admin-features.md`: administrator API, settings, permissions and audit log.

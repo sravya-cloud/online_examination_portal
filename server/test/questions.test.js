@@ -35,7 +35,8 @@ async function start(repo = makeQuestionRepo()) {
       headers: { ...(auth ? { authorization: `Bearer ${auth}` } : {}), ...(body ? { "content-type": "application/json" } : {}) },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    return { status: response.status, body: await response.json() };
+    const text = await response.text();
+    return { status: response.status, body: text ? JSON.parse(text) : {} };
   };
   return { call, repo, close: () => new Promise((resolve) => server.close(resolve)) };
 }
