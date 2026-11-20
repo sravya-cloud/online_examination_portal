@@ -2,8 +2,8 @@
 
 > **Document Status:** Approved & Finalized  
 > **Author:** Manasvi Dr. (Team E6)  
-> **Primary Deliverable Location:** [`7-Software-Testing-and-Bug-Fixes/README.md`](../7-Software-Testing-and-Bug-Fixes/README.md)  
+> **Primary Deliverable Location:** [`docs/testing/code-coverage-report.md`](testing/code-coverage-report.md)  
 > **Traceability:** Test Plan v2.0, Traceability Matrix, Phase 2 Deliverables Specification
 
 Please see the complete, finalized Code and Branch Coverage Report at:
-👉 **[`7-Software-Testing-and-Bug-Fixes/README.md`](../7-Software-Testing-and-Bug-Fixes/README.md)**
+👉 **[`docs/testing/code-coverage-report.md`](testing/code-coverage-report.md)**

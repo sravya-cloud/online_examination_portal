@@ -3,6 +3,36 @@ import express from "express";
 export function createQuestionRouter({ questionRepo, examRepo }) {
   const router = express.Router();
 
+  // FR-05: list and create question pools
+  router.get("/pools", async (req, res) => {
+    try {
+      return res.status(200).json({ pools: await questionRepo.listQuestionPools() });
+    } catch (error) {
+      console.error("List question pools failed:", error);
+      return res.status(500).json({ error: "Unable to list question pools." });
+    }
+  });
+
+  router.post("/pools", async (req, res) => {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    if (!name || name.length > 100) {
+      return res.status(400).json({
+        error: "Invalid question pool.",
+        details: { name: "A pool name of 1 to 100 characters is required." },
+      });
+    }
+    try {
+      if (await questionRepo.findQuestionPoolByName(name)) {
+        return res.status(409).json({ error: "A question pool with this name already exists." });
+      }
+      const pool = await questionRepo.createQuestionPool({ name });
+      return res.status(201).json({ message: "Question pool created successfully.", pool });
+    } catch (error) {
+      console.error("Create question pool failed:", error);
+      return res.status(500).json({ error: "Unable to create question pool." });
+    }
+  });
+
   // Create question (FR-05, FR-06)
   router.post("/", async (req, res) => {
     const { text, options, correctAnswer, questionPoolId, poolId, difficulty } = req.body ?? {};

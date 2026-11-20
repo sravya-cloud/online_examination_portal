@@ -19,10 +19,10 @@ The test suite systematically verifies functional requirements (**FR-01 through 
 
 | Metric Category | Achieved Coverage | Target Threshold | Status |
 |---|:---:|:---:|:---:|
-| **Line Coverage** | **80.62%** | $\ge 75\%$ | **PASSED** |
-| **Branch Coverage** | **76.44%** | $\ge 70\%$ | **PASSED** |
-| **Function Coverage** | **81.45%** | $\ge 75\%$ | **PASSED** |
-| **Test Pass Rate** | **100%** (85/85 active) | $100\%$ | **PASSED** |
+| **Line Coverage** | **80.43%** | $\ge 75\%$ | **PASSED** |
+| **Branch Coverage** | **76.46%** | $\ge 70\%$ | **PASSED** |
+| **Function Coverage** | **79.84%** | $\ge 75\%$ | **PASSED** |
+| **Test Pass Rate** | **100%** (86/86 active) | $100\%$ | **PASSED** |
 | **Failures / Regressions** | **0** | $0$ | **PASSED** |
 
 ---
@@ -45,7 +45,7 @@ The table below reflects the exact V8 coverage metrics generated across all appl
 | `src/routes/auth.js` | 92.00% | 85.19% | **100.00%** | 56–57, 64–65, 70–71 |
 | `src/routes/admin.js` | 88.98% | 80.41% | **100.00%** | 40–41, 52–53, 86–90, 93–94 |
 | `src/routes/exams.js` | 83.43% | 64.48% | **100.00%** | 36, 48–49, 55–61, 134–136, 218 |
-| `src/routes/questions.js` | 77.44% | 69.39% | 80.00% | 21, 51–53, 70–72, 83–86 |
+| `src/routes/questions.js` | 77.78% | 70.69% | 83.33% | 11–13, 31–33, 51, 81–83 |
 | **Domain Services Tier** | | | | |
 | `src/services/objectiveScoring.js` | **100.00%** | **100.00%** | **100.00%** | None |
 | `src/services/settings.js` | 97.18% | 85.71% | **100.00%** | 43–44 |
@@ -53,9 +53,9 @@ The table below reflects the exact V8 coverage metrics generated across all appl
 | `src/services/permissions.js` | **100.00%** | 80.95% | **100.00%** | None |
 | `src/services/audit.js` | **100.00%** | 72.73% | **100.00%** | None |
 | **Persistence Repositories** | | | | |
-| `src/repositories/questionRepository.js` | 75.00% | **100.00%** | 57.14% | 25–28, 32–35, 39–41 |
+| `src/repositories/questionRepository.js` | 70.49% | **100.00%** | 40.00% | 11, 15, 19–23, 42–45 |
 | `src/repositories/examRepository.js` | 31.47% | 50.00% | 17.65% | 31–41, 45–51, 55–82, 85–110 |
-| **Total (All Files Combined)** | **80.62%** | **76.44%** | **81.45%** | **Target Met** |
+| **Total (All Files Combined)** | **80.43%** | **76.46%** | **79.84%** | **Target Met** |
 
 ---
 
@@ -95,7 +95,7 @@ The 87 tests are organized into 11 test suites across functional, security, and 
 | `server/test/nfr03_performance.test.js` | 1 | **NFR-03**: Response time SLA ($\le 3\text{ seconds}$, benchmarked $< 10\text{ ms}$) |
 | `server/test/nfr04_availability.test.js` | 1 | **NFR-04**: High availability health check during active exam windows |
 | `server/test/nfr10_scalability.test.js` | 1 | **NFR-10**: Concurrency stress testing with 50 concurrent candidate requests |
-| `server/test/questionManagement.test.js` | 6 | Question creation, pool listing, difficulty enum validation, access control |
+| `server/test/questions.test.js` | 8 | **FR-05** (Question pools creation/listing), **FR-06** (Question creation), pool listing, difficulty enum validation, access control |
 | `server/test/sprint1_manasvi.test.js` | 11 | **FR-07** (Question editing/locking after publishing), **FR-08** (Duration & availability window configuration), **FR-09** (Uniform random selection), **FR-10** (Fixed question set across attempts) |
 | `server/test/sprint2_manasvi.test.js` | 11 | **FR-19** (Scheduled result release), **FR-20** (Teacher/admin exam reports), Single attempt enforcement, Duration enforcement with server clock, IN_PROGRESS state requirement |
 | `server/test/studentExams.test.js` | 24 | **FR-11** (Question shuffling), **FR-14** (Resuming active attempt), **FR-16** (Score breakdown), **FR-17** (Server-side score calculation), **FR-18** (Attempt persistence under user identity), **FR-21** (Available exam discovery) |

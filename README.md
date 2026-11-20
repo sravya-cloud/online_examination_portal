@@ -53,8 +53,7 @@ The system consists of five main actors:
 - Authenticate users.
 - Support secure login and access control.
 
-### 5. Notification Service
-- Handle system notifications related to examination activities.
+Notifications are outside the Phase 1 scope.
 
 ---
 
@@ -117,38 +116,28 @@ The selected technologies for the project are:
 
 ## 📁 Project Structure
 
-The repository is organized as follows:
-
 ```text
 online_examination_portal/
-│
-├── 1-SRS-and-Work-Breakdown/
-├── 2-Test-Planning/
-├── 3-Requirements-Engineering/
-├── 4-Design-and-Architecture/
-├── 5-GitHub-and-Jira-Evidence/
-├── 6-GitHub-Copilot/
-├── 7-Software-Testing-and-Bug-Fixes/
-├── 8-Deployment-and-Environment/
-├── 9-Demo/
-│
-├── client/                  # React frontend
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── server/                  # Express backend
-│   ├── src/
-│   │   └── index.js
-│   ├── prisma/
-│   │   └── schema.prisma
-│   ├── prisma.config.ts
-│   └── package.json
-│
-├── docs/                    # Additional project documents
+├── .github/workflows/          # CI on pushes and pull requests
+├── client/                     # React + Vite frontend
+│   └── src/
+├── server/                     # Express API and Prisma/PostgreSQL
+│   ├── prisma/                 # Schema, migrations, and seed
+│   ├── src/                    # Routes, repositories, services, auth
+│   └── test/                   # Backend automated tests
+├── docs/
+│   ├── requirements/           # SRS, requirements, and RTM
+│   ├── planning/               # Product and sprint backlogs
+│   ├── architecture/           # SAD, diagrams, and module guide
+│   ├── testing/                # Test plan, traceability, validation
+│   ├── project/                # Deviations and freeze checklist
+│   └── demo/                   # Demo script
+├── output/pdf/                 # Final submission PDF copies; original PDFs remain in docs/
 ├── .gitignore
 └── README.md
 ```
+
+Submission evidence and deployment materials should be added alongside their actual deliverables; empty placeholder files are not used.
 
 ---
 
@@ -301,18 +290,24 @@ The repository includes supporting documentation covering:
 - Deployment and environment setup.
 - Project demonstrations.
 
-Implementation documents are in `docs/` and the Phase 2 deliverable folders:
+Phase 1 documents:
 
-- `4-Design-and-Architecture/README.md` (and `docs/software-architecture-document.md`): Software Architecture Document (SAD v2.0), system architecture diagram, sequence flows, attempt state machine, and data architecture.
-- `7-Software-Testing-and-Bug-Fixes/README.md` (and `docs/code-coverage-report.md`): Code and branch coverage report (80.62% line, 76.44% branch, 81.45% function coverage).
-- `8-Deployment-and-Environment/README.md` (and `docs/deployment-guide.md`): Deployment and environment setup instructions without real credentials.
-- `docs/architecture-modules.md`: module layout and rules for adding code.
-- `docs/test-traceability.md`: requirement to test table.
-- `docs/admin-features.md`: administrator API, settings, permissions and audit log.
-- `docs/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
-- `docs/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
-- `docs/development-freeze.md`: freeze rules and release checklist.
-- `docs/nfr-acceptance-criteria.md`, `docs/browser-compatibility.md`, `docs/b15-security-validation.md` and the `nfr-*` notes: non-functional evidence.
+- [SRS and requirements (FR/NFR, examination rules)](docs/requirements/srs-and-work-breakdown.md)
+- [Test planning (functional, security, non-functional and penetration plans)](docs/testing/README.md)
+- [Requirements engineering (problem statement, use cases, RTM, feasibility)](docs/requirements/requirements-engineering-and-rtm.md)
+
+Phase 2 deliverables & implementation documents are in `docs/`:
+
+- `docs/architecture/software-architecture-document.md`: Software Architecture Document (SAD v2.0), system architecture diagram, sequence flows, attempt state machine, and data architecture.
+- `docs/testing/code-coverage-report.md`: Code and branch coverage report (80.62% line, 76.44% branch, 81.45% function coverage).
+- `docs/deployment/README.md` (and `docs/deployment/deployment-guide.md`): Deployment and environment setup instructions without real credentials.
+- `docs/architecture/architecture-modules.md`: module layout and rules for adding code.
+- `docs/testing/test-traceability.md`: requirement to test table.
+- `docs/architecture/admin-features.md`: administrator API, settings, permissions and audit log.
+- `docs/project/deviations-note.md`: differences from the submitted SRS, SAD and test plan.
+- `docs/demo/demo-script.md`: Sprint 1 and Sprint 2 demo scripts.
+- `docs/project/development-freeze.md`: freeze rules and release checklist.
+- `docs/testing/validation/nfr-acceptance-criteria.md`, `docs/testing/validation/browser-compatibility.md`, `docs/testing/validation/b15-security-validation.md` and the `docs/testing/validation/nfr-*` notes: non-functional evidence.
 
 ---
 

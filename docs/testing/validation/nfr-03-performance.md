@@ -1,7 +1,7 @@
 # Performance Evaluation Report (NFR-03)
 
 ## Objective
-Validate that common user actions complete within 3 seconds under normal load (`VAL-N03`), in accordance with the acceptance criteria established in `docs/nfr-acceptance-criteria.md`.
+Validate that common user actions complete within 3 seconds under normal load (`VAL-N03`), in accordance with the acceptance criteria established in `docs/testing/validation/nfr-acceptance-criteria.md`.
 
 ## Test Methodology
 Automated benchmark measurements are executed via `server/test/nfr03_performance.test.js` using Node.js high-resolution timers (`performance.now()`). Each common user journey was timed end-to-end over HTTP:

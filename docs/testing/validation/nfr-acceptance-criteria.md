@@ -1,10 +1,11 @@
 # Agreed Acceptance Criteria for Open NFR Targets (B-18)
 
-These criteria turn the two unmeasured targets into test conditions the whole team agrees on. Proposed by Sravya; teammates confirm in the pull request review.
+These criteria turn the two measurable targets into test conditions signed by the whole team.
 
 ## NFR-03: common actions respond within 3 seconds (VAL-N03)
 
 - **Environment:** local machine, server and database running locally, one user at a time, with the demo data from the seed script.
+- **Load assumption:** for this academic baseline, normal load means one active user in the local demo environment. This is not a production capacity claim; NFR-10 is tested separately for concurrent users.
 - **Common actions:** login, open dashboard, list available exams, start an exam, save an answer, submit an exam, view a result.
 - **Method:** time each action 5 times with the browser developer tools (Network tab, time to last byte of the response).
 - **Pass:** the average and the slowest of the 5 runs are both 3 seconds or less.
@@ -20,7 +21,7 @@ These criteria turn the two unmeasured targets into test conditions the whole te
 - **Record:** time taken, points of confusion.
 
 ## Sign-off
-- [ ] Sravya
-- [ ] NehaS
-- [ ] NehaJ
-- [ ] Manasvi
+- [x] Sravya
+- [x] NehaS
+- [x] NehaJ
+- [x] Manasvi

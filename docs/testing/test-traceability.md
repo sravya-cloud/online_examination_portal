@@ -1,8 +1,8 @@
 # Requirement to Test Traceability (NFR-09)
 
-Every requirement has a test method and an observable pass condition (VAL-N09). Update the Status column as each feature is merged.
+This matrix lists automated/manual coverage and evidence locations. Results from the targeted unit run and the post-merge full server run are recorded in [`unit-test-report.md`](unit-test-report.md) and [`system-test-report.md`](system-test-report.md). A test's presence does not establish a pass; use those reports for the latest recorded execution results.
 
-Status key: Done = automated or manual test exists and passes. Planned = test case written, feature not finished.
+Status key: Done = test coverage or evidence is documented. Planned = validation remains pending. Consult the linked reports for actual run outcomes.
 
 | Requirement | Test method | Test location | Status |
 |---|---|---|---|
@@ -10,7 +10,7 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-02 Teacher login | Automated | `server/test/auth.test.js` | Done |
 | FR-22 Administrator login | Automated | `server/test/auth.test.js` | Done |
 | FR-04 Create examinations | Automated | `server/test/exams.test.js` | Done |
-| FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` | Done |
+| FR-05 Upload questions to question bank | Automated | `server/test/questions.test.js` (questions and question pools; Question Bank tab for teachers) | Done |
 | FR-06 Assign difficulty level to questions | Automated | `server/test/questions.test.js` | Done |
 | NFR-02 Reliability: no loss of submitted data | PostgreSQL integration | `server/test/nfr02_reliability.test.js` (attempt and answer JSON persist after disconnecting and reconnecting a Prisma client) | Done |
 | FR-07 Edit or remove questions before publishing | Automated | `server/test/sprint1_manasvi.test.js` (VAL-F13: editable before publish, blocked after publish) | Done |
@@ -25,12 +25,12 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-24 Admin: manage role permissions | Automated | `server/test/admin.test.js` (VAL-F22: change takes effect on the next request) | Done |
 | NFR-12 Auditability | Automated | `server/test/admin.test.js` (VAL-N12: admin and exam actions logged with actor) | Done |
 | NFR-01 Authenticated access and roles | Automated | `server/test/auth.test.js` (401, 403, expired and tampered tokens, rate limit) | Done |
-| NFR-03 Performance within 3 seconds | Automated | `server/test/nfr03_performance.test.js` (VAL-N03, `docs/nfr-03-performance.md`) | Done |
-| NFR-07 Modularity | Review + automated | `docs/architecture-modules.md`, tests with fake repository | Done |
-| NFR-08 Browser compatibility | Manual | `docs/browser-compatibility.md` | Done |
+| NFR-03 Performance within 3 seconds | Automated | `server/test/nfr03_performance.test.js` (VAL-N03, `docs/testing/validation/nfr-03-performance.md`) | Done |
+| NFR-07 Modularity | Review + automated | `docs/architecture/architecture-modules.md`, tests with fake repository | Done |
+| NFR-08 Browser compatibility | Manual | `docs/testing/validation/browser-compatibility.md` | Done |
 | NFR-09 Testability | Review | This table | Done |
-| NFR-10 Scalability | Automated | `server/test/nfr10_scalability.test.js` (VAL-N10, `docs/nfr-10-scalability.md`) | Done |
-| B-15 Security validation | Automated | `server/test/b15_security.test.js` (`docs/b15-security-validation.md`) | Done |
+| NFR-10 Scalability | Automated | `server/test/nfr10_scalability.test.js` (VAL-N10, `docs/testing/validation/nfr-10-scalability.md`) | Done |
+| B-15 Security validation | Automated | `server/test/b15_security.test.js` (`docs/testing/validation/b15-security-validation.md`) | Done |
 | FR-12 Display questions of active attempt | Automated | `server/test/sprint2_manasvi.test.js`, `server/test/examDetailsSecurity.test.js` (VAL-F06) | Done |
 | FR-13 Select and save answers | Automated + manual | `server/test/sprint2_manasvi.test.js` (answers stored on submit); answers kept in the browser until submit, checked in the demo run | Done |
 | FR-15 Manual submission | Automated | `server/test/sprint2_manasvi.test.js` (VAL-F07: submit stores answers, only once per exam) | Done |
@@ -39,10 +39,10 @@ Status key: Done = automated or manual test exists and passes. Planned = test ca
 | FR-17 Calculate exam score | Automated | `server/test/fr17_scoring.test.js` (VAL-F08) | Done |
 | FR-18 Securely store attempts and answers | Automated | `server/test/fr18_secure_attempts.test.js` (VAL-S11, SEC-05) | Done |
 | FR-21 Display available examinations | Automated | `server/test/studentExams.test.js` (VAL-F11) | Done |
-| NFR-04 Availability during exam window | Automated | `server/test/nfr04_availability.test.js` (`docs/nfr-04-availability.md`) | Done |
+| NFR-04 Availability during exam window | Automated | `server/test/nfr04_availability.test.js` (`docs/testing/validation/nfr-04-availability.md`) | Done |
 | NFR-05 Usability | Manual | Demo walkthrough: each major action shows a clear message | Planned (manual run before demo) |
-| NFR-06 Learnability (5 minutes) | Manual | Timed trial with a new user, conditions in `docs/nfr-acceptance-criteria.md` | Planned (manual run before demo) |
-| NFR-11 Data integrity | PostgreSQL integration | `server/test/nfr11_integrity.integration.test.js` (runs in CI, `docs/nfr-11-data-integrity.md`) | Done |
+| NFR-06 Learnability (5 minutes) | Manual | Timed trial with two first-time participants, conditions in `docs/testing/validation/nfr-acceptance-criteria.md` | Planned (team-approved criteria; manual run before demo) |
+| NFR-11 Data integrity | PostgreSQL integration | `server/test/nfr11_integrity.integration.test.js` (runs in CI, `docs/testing/validation/nfr-11-data-integrity.md`) | Done |
 
 Each owner adds a row for their requirement when their pull request is raised, naming the test file or manual checklist. A pull request is complete when its requirement row says Done.
 
